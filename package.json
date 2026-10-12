@@ -1,0 +1,37 @@
+{
+  "name": "day3-till",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "indexer": "node --env-file=.env --experimental-strip-types indexer/indexer.ts",
+    "totals": "node --env-file=.env --experimental-strip-types indexer/totals.ts",
+    "pay": "node --env-file=.env --experimental-strip-types scripts/pay.ts",
+    "receipt": "node --experimental-strip-types scripts/receipt.ts",
+    "migrate:legacy": "node --experimental-strip-types migration/legacy-jsonrpc.ts",
+    "migrate:grpc": "node --experimental-strip-types migration/migrated-grpc.ts",
+    "migrate:graphql": "node --experimental-strip-types migration/migrated-graphql.ts",
+    "close": "node --env-file=.env --experimental-strip-types indexer/close.ts"
+  },
+  "dependencies": {
+    "@mysten/sui": "^2.35.0",
+    "qrcode.react": "^4.2.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vercel/node": "^23.0.1",
+    "@vitejs/plugin-react": "^6.1.2",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4"
+  },
+  "engines": {
+    "node": ">=22.6"
+  }
+}
