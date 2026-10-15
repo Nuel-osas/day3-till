@@ -91,7 +91,7 @@ Check JSON response bodies, not just HTTP status. On 15 October 2026 the public 
 - [Speaker notes](teaching/Day3-speaker-notes.md)
 - [Verification evidence](teaching/VERIFICATION.md)
 
-`pnpm slides` regenerates the 30-slide PowerPoint and notes from `teaching/generate-slides.cjs`. Screenshots are in `teaching/assets/`. PDF export uses the presentation rendering workflow described in `teaching/RENDERING.md`.
+`pnpm slides` regenerates the 15-slide PowerPoint and notes from `teaching/generate-slides.cjs`. Screenshots are in `teaching/assets/`. PDF export uses the presentation rendering workflow described in `teaching/RENDERING.md`.
 
 ## Deploy
 

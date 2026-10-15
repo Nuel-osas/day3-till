@@ -33,7 +33,7 @@ Archived receipt: [ArCwXsZUTywBuM4GbNX4CVMERmBBgeYY2mgmJJjdHa3a](https://suiscan
 
 ## Slide checks
 
-30 editable slides, 30 speaker-note entries and a 30-page PDF. Rendered through Quick Look and Chrome with the supplied DM Sans and JetBrains Mono fonts. All slides were inspected through contact sheets, with detailed checks of screenshots and code slides. Final text overflow check: zero candidates.
+15 editable slides, 15 speaker-note entries and a 15-page PDF. Rendered through Quick Look and Chrome with the supplied DM Sans and JetBrains Mono fonts. All slides were inspected through contact sheets, with detailed checks of screenshots and code slides. Final text overflow check: zero candidates.
 
 ## Limits of these checks
 
