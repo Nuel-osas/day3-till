@@ -33,6 +33,8 @@ Archived receipt: [ArCwXsZUTywBuM4GbNX4CVMERmBBgeYY2mgmJJjdHa3a](https://suiscan
 
 ## Slide checks
 
+The final 15-slide sequence was realigned to the full advertised title and all seven learning outcomes. It ends with a migration workshop on students’ projects, and explicitly marks the unverified USDC payment requirement. The current testnet query payload limit was re-read as 5,000 bytes.
+
 15 editable slides, 15 speaker-note entries and a 15-page PDF. Rendered through Quick Look and Chrome with the supplied DM Sans and JetBrains Mono fonts. All slides were inspected through contact sheets, with detailed checks of screenshots and code slides. Final text overflow check: zero candidates.
 
 ## Limits of these checks

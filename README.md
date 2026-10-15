@@ -1,10 +1,26 @@
 # Till Lab · Day 3
 
-A personal live payments lab for SuiHub Lagos. Send real testnet SUI, pause the listener, resume missed payments, and inspect an archived receipt.
+The case-study app for **Real-Time Sui: GraphQL Subscriptions and the Data Stack After JSON-RPC** at SuiHub Lagos. The class teaches data-stack selection, filtered subscriptions, reliable delivery, indexing, historical access and migration. Till makes those concepts visible through real testnet payments.
 
 **Live:** https://day3-till.vercel.app
 
 **Code:** https://github.com/Nuel-osas/day3-till
+
+## Class agenda and readiness
+
+The 15-slide deck follows the advertised technical topic. Till is the worked example, followed by a workshop on students' own applications.
+
+| Advertised learning outcome | Slides |
+| --- | --- |
+| gRPC, GraphQL, archive, indexing framework and workload choices | 2–3, 9 |
+| Transaction/event filters and selected fields | 4–5 |
+| SSE over POST and streaming with fetch | 6 |
+| Cursors, backfill, ordering and subscriber throttling | 7–8 |
+| SQLite/Postgres, idempotency and when to use Rust | 8–9, 13 |
+| Old receipts, query/page/time limits and production providers | 10–11 |
+| Build Till, recover a payment, total the database and migrate an app | 12–15 |
+
+**USDC readiness gap:** the event advertises USDC payments, but the built-in payment form currently sends SUI. The feed and SQLite writer process coin types generically; no funded USDC transfer has been verified. The deck explicitly labels the current SUI walkthrough. Do not present it as a completed USDC demo.
 
 ## Try it
 
@@ -55,7 +71,7 @@ Verified on public testnet on **15 October 2026**:
 - The archived digest `ArCwXsZUTywBuM4GbNX4CVMERmBBgeYY2mgmJJjdHa3a` returned not found from the public full node, while GraphQL returned its 7 October 2025 receipt at checkpoint 250000000.
 - The browser feed is bounded to 500 records and totals only the tracked UTC-day session. It is not a complete merchant ledger.
 - Each transaction selection asks for the first 50 balance changes. Complex transactions with more changes need nested pagination for complete accounting.
-- Public endpoints have provider-specific limits. Observed `Query.transactions` defaults: page 20, maximum 50; query timeout 40 seconds, depth 20 and nodes 300. Read current service configuration instead of hard-coding these as universal limits.
+- Public endpoints have provider-specific limits. Observed `Query.transactions` defaults: page 20, maximum 50; query payload 5,000 bytes, query timeout 40 seconds, depth 20 and nodes 300. Read current service configuration instead of hard-coding these as universal limits.
 
 ## SQLite writer
 

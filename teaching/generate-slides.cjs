@@ -5,23 +5,12 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
 const OUT = process.env.SLIDES_OUT || path.join(__dirname, 'Day3_Till_Live_Data_Seedless_Style.pptx');
 const p = new pptxgen(); p.layout = 'LAYOUT_WIDE';
-p.author = 'Ruru | SuiHub Lagos'; p.subject = 'Account Layer Week, Day 3'; p.title = 'Real-time Sui | Till Lab'; p.company = 'SuiHub Lagos'; p.lang = 'en-GB';
+p.author = 'Ruru | SuiHub Lagos'; p.subject = 'Account Layer Week, Day 3'; p.title = 'Real-Time Sui: GraphQL Subscriptions and the Data Stack After JSON-RPC'; p.company = 'SuiHub Lagos'; p.lang = 'en-GB';
 p.theme = { headFontFace: 'DM Sans', bodyFontFace: 'DM Sans', lang: 'en-GB' };
 const C = { dark:'07080F', blue:'2338FF', light:'F4F5F8', white:'FFFFFF', ink:'131725', muted:'69738B', pale:'E8ECFF', dim:'ACB8DB', green:'078256', red:'C5424E' };
 const W=13.333333,H=7.5,M=.85;
 const notes=[];
-// Presenter detail keeps the 15-slide lesson concise on screen.
-const NOTE_EXTRAS = {
-  "1": "Today’s route: choose a data layer, subscribe, send a payment, pause and recover, persist receipts, find history and migrate a legacy call. The demo is observation, not an allowance or a recurring-payment scheduler.",
-  "2": "Class setup: choose Demo payer or My wallet, get test SUI for the payer, and open the till before sending. Browser keys stay local and each payer has a separate receiving shop. The shop needs no gas to receive. A connected wallet signs on sui:testnet. Keep the app open while teaching; the next screenshots refer to these same controls.",
-  "3": "Choose by workload: wallets use gRPC plus GraphQL activity history; shops use subscriptions plus a small writer; games execute through gRPC and stream domain events; analytics use a checkpoint indexer. SQLite or Postgres can keep a focused feed. Use the Rust indexing framework for checkpoint backfills, parallel transformations, schema ownership and reprocessing at chain scale. Source: https://docs.sui.io/concepts/custom-indexing-framework",
-  "6": "Live demo: wait for Live, send 0.01 test SUI, then inspect the feed and View receipt. Confirmation can precede GraphQL indexing. The receipt requires SUCCESS and a positive net balance change to the shop; sum each coin with BigInt before formatting. Outgoing transfers and failures are not sales. The class screenshot payment is 9dc36To1WB6PxSqHFyzbsYGSMtJ7JBVDSfuxkxnNUksv on testnet.",
-  "7": "Live exercise: click Pause feed, send another payment, then Resume feed. This aborts only the subscription; chain activity and independent balance reads continue. After recovery, refresh the page and reopen the till. Ask the class to check that the digest appears once and the total is unchanged.",
-  "8": "Persist each cursor together with its receipts in one versioned per-shop snapshot. Advancing the cursor first could lose a receipt on a crash. Deduplicate by digest plus normalized coin type. The browser list retains at most 500 records, so it is not a complete ledger. Ordering follows checkpoint, transaction position and, for events, event position. Treat cursors as opaque. Reconnect with backoff; cancel old retries when the account or shop changes.",
-  "9": "Terminal walkthrough: use Node 24, run pnpm install, copy .env.example to .env, set SHOP_ADDRESS and FROM_CHECKPOINT from the UI, then run pnpm indexer. Stop the writer, send a payment, restart, and run pnpm totals in another terminal. Use one TILL_DB per shop. The tested writer backfilled three receipts totalling 0.03 SUI and resumed its watermark without duplicates. Amounts are stored as text and summed with BigInt. SQLite runs locally; the Vercel app does not host this long-running process.",
-  "12": "Dates for context: GraphQL subscriptions were announced for mainnet and testnet on 21 September 2026. Foundation mainnet JSON-RPC disablement began the week of 27 July; source removal was planned for mid-October. The public testnet endpoint returned -32601 inside HTTP 200 on 15 October. Other providers may differ. Sources: https://www.sui.io/blog/graphql-on-sui-now-supports-real-time-subscriptions and https://docs.sui.io/develop/accessing-data/json-rpc-migration",
-  "15": "Verified production testnet receipts: live coin transfer H1fQ22Q5V6yt37GaiySNqGhUJR7ki4b35Te9Qcja9Bqn; paused then recovered 66XRjyGEKngFwGZntzULDr6v4hrwFPnR8ZmY9fmPW6Zh; address-balance catch-up 5crvrKsvQGU3emZvNCEJgKjpAwENtCHHxfY4UMy11Dcc. See teaching/VERIFICATION.md for explorer links and the exact test scope."
-};
+const NOTE_EXTRAS = {};
 const LIVE='https://day3-till.vercel.app';
 const REPO='https://github.com/Nuel-osas/day3-till';
 const SOURCES={launch:'https://www.sui.io/blog/graphql-on-sui-now-supports-real-time-subscriptions',graphql:'https://docs.sui.io/develop/accessing-data/graphql/graphql-rpc',migration:'https://docs.sui.io/develop/accessing-data/json-rpc-migration',schema:'https://github.com/MystenLabs/sui/blob/main/crates/sui-indexer-alt-graphql/schema.graphql',indexer:'https://docs.sui.io/concepts/custom-indexing-framework'};
@@ -54,32 +43,57 @@ function labelAt(s,t,x,y,w,color){txt(s,t,x,y,w,.25,10,color,{fontFace:'JetBrain
 
 const file=relative=>fs.readFileSync(path.join(ROOT,relative),'utf8');
 // 01
-{const s=base('','ACCOUNT LAYER WEEK / DAY 03','Today we build Till: a live payments screen. Days 1 and 2 dealt with identity and permission. Day 3 makes the resulting activity visible. Start by opening the live app; everyone will get a personal payer and a personal shop. All payments in this class use Sui testnet. No Move deployment is required for Till.',C.dark);rect(s,8.65,0,4.69,H,'101E69');rect(s,11.6,0,1.74,H,C.blue);txt(s,'Real-time\nSui.',M,1.75,9.8,2.95,72,C.white);txt(s,'A payment happens.\nYour app should know.',M,4.8,9.5,1.15,29,C.dim);txt(s,'GRAPHQL SUBSCRIPTIONS / THE NEW DATA STACK',M,6.38,11,.3,12,'9BAFFF',{fontFace:'JetBrains Mono'});}
+{
+ const s=base('','SUIHUB LAGOS / DAY 03',
+ 'This session is about choosing and using the Sui data stack after JSON-RPC. Till is the practical case study that makes subscriptions, recovery, persistence and history visible. The final workshop applies the same migration to a project each student brings. No Move is required. Keep the distinction from Day 2 clear: this is data access and application architecture, not recurring-payment permission.',C.dark);
+ rect(s,9.15,0,4.19,H,'101E69');rect(s,11.6,0,1.74,H,C.blue);
+ txt(s,'Real-Time Sui',M,1.65,10.7,1.1,62,C.white);
+ txt(s,'GraphQL Subscriptions\nand the Data Stack\nAfter JSON-RPC',M,3.05,8.3,2.25,34,C.dim);
+ txt(s,'MAP THE STACK / BUILD TILL / MIGRATE YOUR APP',M,6.3,11,.35,11,'9BAFFF',{fontFace:'JetBrains Mono'});
+}
 // 02
-screen('Meet your live till.','TODAY’S DEMO','overview.png','Open '+LIVE+'. Explain the visual hierarchy: personal payer and shop, money flow, stream status, payment feed, test payment controls. The app uses real testnet transactions. A green receipt is created from an indexed successful positive net balance change to the watched shop. The balance cards read gRPC independently of the subscription.','Live app: day3-till.vercel.app   /   Real testnet transactions. Personal student wallets.');
+cards('Why this session, now?','THE MIGRATION CONTEXT',[
+ {label:'JULY 2026',title:'JSON-RPC shutoff',body:'Foundation mainnet disablement began the week of 27 July.'},
+ {label:'21 SEPTEMBER',title:'Subscriptions live',body:'GraphQL subscriptions announced for mainnet and testnet.',blue:true},
+ {label:'YOUR APP',title:'Choose its data path.',body:'Read current state, stream activity, retrieve history and migrate.'}],
+ 'The official migration page reports Foundation mainnet JSON-RPC disablement in the week of 27 July 2026 and plans source removal for mid-October. Avoid claiming that every provider has already removed it. The public testnet endpoint returned -32601 inside HTTP 200 in our 15 October checks. The GraphQL subscription announcement is dated 21 September. Today we build the replacement path and migrate one real call. Sources: '+SOURCES.migration+' ; '+SOURCES.launch);
 // 03
-cards('Four layers. Four different jobs.','THE DATA STACK',[
-{label:'01 / gRPC',title:'Read and act now.',body:'Balances, objects, execution and checkpoints.'},
-{label:'02 / GRAPHQL',title:'Ask for a screen.',body:'Filtered history, selected fields and subscriptions.',blue:true},
-{label:'03 / ARCHIVE',title:'Keep the past.',body:'History beyond a full node’s retention.'},
-{label:'04 / YOUR INDEXER',title:'Own the data model.',body:'Durable aggregates, joins and reprocessing.'}], 'gRPC serves the full node interface, including transaction execution. GraphQL is an indexed service with expressive selections and subscriptions. Archival storage keeps history beyond a node retention window; an arbitrary gRPC endpoint does not automatically query it. A custom indexer owns a derived model in your database. Source: '+SOURCES.graphql);
+cards('Four layers. Choose for your workload.','THE DATA STACK',[
+ {label:'gRPC / WALLET + GAME',title:'Current state and actions',body:'Balances, execution and live checkpoint streams.'},
+ {label:'GRAPHQL / APP + SHOP',title:'Filtered reads and feeds',body:'Select fields, join history and subscribe to activity.',blue:true},
+ {label:'ARCHIVE / OLD RECEIPTS',title:'History past retention',body:'Retrieve records a full node has pruned.'},
+ {label:'CUSTOM INDEXER / ANALYTICS',title:'Your own data model',body:'Backfill checkpoints, transform data and own aggregates.'}],
+ 'The workload determines the combination. A wallet uses gRPC for state and execution, with GraphQL for activity. A shop can use a GraphQL subscription plus a small database writer. A game executes actions through gRPC and streams domain events. An analytics backend often needs a custom checkpoint pipeline. Archival access is a separate data service; full node gRPC does not silently fall back to old history. A GraphQL operator can configure archive-backed point lookups. Sources: '+SOURCES.graphql+' ; '+SOURCES.indexer);
 // 04
-{const query=file('src/lib/till.ts').split('/* GraphQL */ `')[1].split('`;')[0].trim();code('One document. Any shop.','src/lib/till.ts',query,'Read the actual subscription in the repository. affectedAddress narrows candidates to this shop. after is a stream cursor; afterCheckpoint establishes an opening boundary when there is no cursor yet. The payload includes only the fields used to derive receipts. Balance changes are bounded to 50 here, sufficient for the small demo transactions but not a universal accounting guarantee. Source: live schema introspection, 15 October 2026; '+SOURCES.schema,'Select a small payload. Every matching transaction carries a cursor.');}
+{
+ const s=cards('Subscribe to what your screen needs.','TRANSACTIONS + EVENTS',[
+ {label:'TRANSACTIONS',title:'Address, object or call',body:'affectedAddress · affectedObject\nfunction · kind · sentAddress\nCheckpoint bounds + cursor'},
+ {label:'EVENTS',title:'Sender, module or type',body:'sender · module · type\nCheckpoint bounds + cursor\nSelect only the fields you need.',blue:true}],
+ 'These field names come from the live testnet schema. Transactions support affectedAddress, affectedObject, function, kind and sentAddress. Event filters support sender, module and type. Both support afterCheckpoint, atCheckpoint and beforeCheckpoint. checkpoints is also a subscription root. A subscription returns edges with cursor and node. Use an affectedAddress transaction feed for Till; use typed events when your Move application emits a domain event. No custom indexer deployment is needed just to consume this hosted service. Indexing still happens behind the service. Source: '+SOURCES.schema);
+ txt(s,'Till selects digest, sender, status, timestamp, checkpoint and balance changes.',M,6.55,11.6,.35,16,C.muted);
+}
 // 05
-cards('Choose a filter. Open the stream.','SUBSCRIPTIONS + TRANSPORT',[
-{label:'TRANSACTIONS',title:'Who or what?',body:'affectedAddress · affectedObject · sentAddress'},
-{label:'EVENTS',title:'Which event?',body:'sender · module · type + checkpoint bounds.'},
-{label:'CHECKPOINTS',title:'Follow chain progress.',body:'Ordered delivery with a saved resume position.'},
-{label:'SSE OVER POST',title:'Use fetch to listen.',body:'EventSource cannot send the GraphQL query body.',blue:true}], 'Transactions, events and checkpoints are the subscription roots. Transaction filters also include function, kind, afterCheckpoint, atCheckpoint and beforeCheckpoint. Events accept sender, module, type and checkpoint boundaries. POST { query, variables } to /graphql/subscriptions with Accept: text/event-stream. This is not a websocket. The shared src/lib/sse.ts parser handles keepalive comments, split CRLF frames, multiline data and empty complete events. GraphQL errors can arrive inside HTTP 200 and must trigger failure/retry, not a false Live state. Sources: live schema checked 15 October 2026; '+SOURCES.schema);
+{
+ const query=file('src/lib/till.ts').split('/* GraphQL */ `')[1].split('`;')[0].trim();
+ code('The actual Till subscription.','src/lib/till.ts',query,
+ 'This is the actual repository document. Point out the affectedAddress filter and how the selection set is limited to receipt data. A match is only a candidate payment: the client also checks SUCCESS and keeps positive net changes for the shop, grouped by normalized coin type using BigInt. Outgoing transfers and failed transactions must not become sales. The first 50 balance changes are enough for the small demo transfers, not a complete accounting guarantee for arbitrary complex transactions.',
+ 'A matching transaction becomes a receipt only after success and balance-change checks.');
+}
 // 06
-screen('Watch the money move.','RED OUT / GREEN IN','balances.png','Read both balances before and after a transfer. The payer’s net debit includes gas; it need not equal exactly the payment. The shop receives the payment amount. Both cards include coin-object balances and address balances. Their latest change is measured between gRPC reads, so concurrent activity can affect it. The app labels the delta as latest change, not exact transaction accounting.','Payer ↓ payment + gas   /   Shop ↑ received value   /   Balances refresh independently of the feed');
+code('POST + SSE. Stream with fetch.','src/lib/sse.ts',
+ file('src/lib/sse.ts').slice(file('src/lib/sse.ts').indexOf('  const res = await fetch'),file('src/lib/sse.ts').indexOf('  let buf')).trim(),
+ 'POST the GraphQL query and variables to /graphql/subscriptions. The response is text/event-stream. Browser EventSource cannot send the POST body, and a websocket client uses the wrong transport. The shared browser/Node parser handles comments, split CRLF frames, multiline data and complete events. GraphQL errors may be inside HTTP 200, so the caller must treat them as errors and reconnect appropriately. The seven automated tests include these parser cases.',
+ 'POST /graphql/subscriptions   /   text/event-stream   /   EventSource cannot POST the query');
 // 07
-screen('It catches up from where you stopped.','LIVE DEMO / RECOVERY','recovery.png','The recovered tag is assigned to a payment whose chain timestamp predates the connection start. It is an instructional approximation using browser time, not a protocol flag. The important assertions are the transaction digest appearing once and the totals remaining correct. Refresh the page, click Open till again, and show that replay does not duplicate the already stored payment.','Saved position → historical catch-up → live delivery on the same connection');
+flow('Resume from a durable position.','CURSOR → BACKFILL → LIVE',[
+ ['First start','afterCheckpoint sets the opening boundary'],
+ ['Every delivery','Persist the cursor with processed data'],
+ ['Reconnect','after resumes from the last saved cursor'],
+ ['Catch up','Replay missed activity, then switch to live']],
+ 'Capture an opening checkpoint before the first subscription so a disconnect before any delivery can still recover. Once a cursor exists, resume with after. Treat cursors as opaque and scoped to the shop and query. Persist progress for every matching delivery, even one that is not a sale. Checkpoint order comes first, then transaction position, with event position within a transaction for events. Per-subscriber throttling and server disconnects require bounded processing, backoff and retry. Our client cancels stale streams and retries when a shop changes. A successful reconnect alone is not proof that your app stored every payment.',
+ 'Checkpoint order → transaction order → event order. Respect subscriber throttling.');
 // 08
-flow('No cursor yet? Keep a checkpoint.','RESUME STRATEGY',[
-['First open','Capture an opening checkpoint'],['First delivery','Save the cursor with its payment'],['Reconnect','Use after, or the opening checkpoint'],['Continue','Replay first. Then follow live.']], 'The old app could miss a payment if it disconnected before its first matching delivery: no cursor had been saved. The upgraded app captures the latest indexed checkpoint before opening the stream and persists it. When there is no cursor, it sends afterCheckpoint. Once a cursor exists, after takes over. Do not parse or manufacture a cursor; treat it as opaque and keep it scoped to the shop and query.');
-// 09
-code('The cursor belongs in the same commit.','indexer/indexer.ts / EXCERPT',`db.exec('BEGIN');
+code('A small indexer: commit data and cursor.','indexer/indexer.ts / EXCERPT',`db.exec('BEGIN');
 try {
   for (const p of payments) {
     insert.run(p.digest, p.coinType, p.amount,
@@ -91,36 +105,55 @@ try {
 } catch (e) {
   db.exec('ROLLBACK');
   throw e;
-}`, 'This is the writer excerpt with log lines omitted and arguments wrapped. INSERT OR IGNORE handles the primary key on digest and coin_type. Save the watermark even when a matching transaction produces no incoming receipt. Demonstrate stopping and restarting the indexer. Its stored cursor resumes the same feed. A failure between insert and watermark must roll both back. The code is for one shop per database file.','pnpm indexer → pnpm totals   /   PRIMARY KEY (digest, coin_type)   /   One commit');
+}`,
+ 'A TypeScript subscriber can write to SQLite or Postgres. The cursor is the progress watermark; this receipt writer uses PRIMARY KEY (digest, coin_type) as its unique business-record key, rather than assuming that a cursor itself identifies one payment. INSERT OR IGNORE makes replay idempotent. Commit rows and watermark together, or roll back both. Amounts are base-unit text and totals use BigInt. Local exercise: copy .env.example, set SHOP_ADDRESS and FROM_CHECKPOINT, run pnpm indexer, stop it, pay, restart, then pnpm totals. The tested restart retained three receipts totalling 0.03 SUI without duplication. Use one database per shop. Vercel does not run this long-lived writer.',
+ 'pnpm indexer → stop → pay → restart → pnpm totals   /   Atomic writes + unique receipt keys');
+// 09
+cards('When should you use the Rust framework?','SUBSCRIPTION WRITER → CUSTOM PIPELINE',[
+ {label:'SQLITE / POSTGRES WRITER',title:'A focused application feed',body:'One shop, selected activity,\na small derived table\nand straightforward totals.'},
+ {label:'RUST INDEXING FRAMEWORK',title:'A checkpoint pipeline',body:'Large backfills, parallel work,\ncustom schemas, complex joins\nand controlled reprocessing.',blue:true}],
+ 'The subscription writer is the lighter path for an application that does not need a full indexing pipeline. The custom framework becomes useful when throughput, backfill, transformations and recovery belong under your control. It brings operational work: database migrations, checkpoint watermarks, monitoring and reprocessing. This session explains that decision boundary; it does not build a new Rust indexer. Source: '+SOURCES.indexer);
 // 10
-screen('A full node can forget. History remains.','04 / ARCHIVED RECEIPT','receipt.png','This default testnet digest is ArCwXsZUTywBuM4GbNX4CVMERmBBgeYY2mgmJJjdHa3a. Rechecked on 15 October 2026: the public full node gRPC lookup returned not found; GraphQL returned SUCCESS at checkpoint 250000000, timestamp 2025-10-07T22:04:44.571Z. The scripts/receipt.ts command demonstrates both responses. Not-found alone does not prove the cause for an arbitrary digest; this known old example has corroborating history.','Verified 15 October 2026   /   Transaction dated 7 October 2025   /   Checkpoint 250,000,000');
+screen('Find history beyond the full node.','ARCHIVAL STORE + GRAPHQL','receipt.png',
+ 'Use the receipt page or pnpm receipt. Verified on 15 October 2026: the public gRPC full node returned not found for ArCwXsZUTywBuM4GbNX4CVMERmBBgeYY2mgmJJjdHa3a, while GraphQL returned SUCCESS at checkpoint 250000000 on 7 October 2025. Full-node retention is different from archival history. A random not-found response alone does not prove pruning; this known old receipt has corroborating data. The app labels its result source and keeps the full digest available.',
+ 'Known receipt: 7 October 2025   /   Checkpoint 250,000,000   /   GraphQL found it');
 // 11
-cards('Plan for limits and real-world gaps.','GOTCHAS / OBSERVED 15 OCTOBER 2026',[
-{label:'PAGINATION',title:'20 default / 50 max',body:'Observed for Query.transactions. Page longer history.'},
-{label:'QUERY TIMEOUT',title:'40 seconds',body:'Keep selections small. Provider settings can change.'},
-{label:'LIVE FILTER GAP',title:'Confirmed, but missing?',body:'Address-balance deposits appeared after catch-up.',blue:true},
-{label:'PRODUCTION',title:'Check your provider.',body:'Throttling, retention, quotas, auth and uptime matter.'}], 'These are observed public testnet settings, not protocol constants: Query.transactions default page 20 and maximum 50, query timeout 40000 ms, maximum depth 20 and nodes 300. Page nested connections for complete accounting; Till selects the first 50 balance changes per transaction. Per-subscriber throttling applies, but its threshold was not measured. In both local and production tests, balance::send_funds deposits changed onchain balances but appeared in the affectedAddress feed only after Catch up now. Present this as measured provider behaviour and re-test before class. HTTP 200 may contain a GraphQL or JSON-RPC error. The faucet can be slow or rate-limited; refresh balances before retrying. Browser storage can be blocked or cleared, which affects persistence and demo keys. The app labels these boundaries rather than fabricating receipts. Source: '+SOURCES.graphql);
+cards('Public endpoints are for development.','LIMITS + PROVIDERS + GOTCHAS',[
+ {label:'QUERY BUDGET / OBSERVED',title:'5,000 bytes · 40 seconds',body:'Query payload and timeout limits vary by service.'},
+ {label:'PAGINATION / OBSERVED',title:'20 default · 50 maximum',body:'Page Query.transactions and nested collections.'},
+ {label:'BEFORE LAUNCH',title:'Choose a production endpoint.',body:'Check quotas, throttling, retention, auth and uptime.',blue:true},
+ {label:'REAL DEMO GOTCHA',title:'Confirmed, but missing live?',body:'Address-balance deposits appeared after catch-up.'}],
+ 'Read the service configuration, not a guessed universal limit. Today the testnet service reports maxQueryPayloadSize 5000, queryTimeoutMs 40000, Query.transactions defaultPageSize 20, maxPageSize 50, maxQueryDepth 20 and maxQueryNodes 300. Foundation public load balancers are rate-limited development/public-good endpoints; arrange a dedicated provider or your own service before a production launch. Check subscription support and archival retention explicitly. Tested send_funds address-balance deposits changed balances but appeared in the affectedAddress subscription only after catch-up. Other traps: HTTP 200 may contain errors; the faucet may delay or rate-limit; clearing browser storage loses local demo keys; a changed query may need a fresh historical boundary. Sources: live serviceConfig; '+SOURCES.migration+' ; '+SOURCES.graphql);
 // 12
-code('Migrate the intention, not just the method.','migration/ / THREE RUNNABLE EXAMPLES',`pnpm migrate:legacy   # inspect the JSON-RPC error body
+screen('Build Till on the stack we just mapped.','HANDS-ON / YOUR OWN SHOP','overview.png',
+ 'Till is the case study, not the whole subject. It executes through gRPC, subscribes through GraphQL, saves receipt progress, writes a separate SQLite ledger and looks up archived history. Each student gets a separate browser payer and shop, or connects a testnet wallet. Open till, fund the payer and send a payment. Compare the red debit with the green credit; gas is paid in SUI. Wait for the actual indexed receipt and enable the chime through a user gesture. The advertised event names USDC. Readiness gap: the built-in form currently sends SUI, and no funded USDC payment has been verified. The receipt and local database paths handle coin types generically, but that is not proof of a successful USDC run. Say this before class rather than presenting the SUI screenshot as USDC. Do not use mainnet funds for this testnet lab.',
+ 'Current verified walkthrough: test SUI. The advertised USDC payment still needs verification.');
+// 13
+screen('Pause mid-sale. Recover. Reconcile.','HANDS-ON / DELIVERY + LIFECYCLE','recovery.png',
+ 'Pause the feed, send another payment, then Resume. This aborts only the listener, so payments and independent gRPC balance refreshes keep working. The recovered label is a browser-time approximation; verify the actual digest and total. Then reload and reopen the till to check deduplication. Start the local indexer and compare pnpm totals with the tracked receipts. The browser keeps only 500 records and is not a complete ledger. Switch connected payer to show its own shop, return to restore the prior shop, and explain that Reset clears tracking but not keys or onchain funds. Query/version changes need intentionally chosen resume boundaries. Actual production proofs: live H1fQ22Q5V6yt37GaiySNqGhUJR7ki4b35Te9Qcja9Bqn; paused then recovered 66XRjyGEKngFwGZntzULDr6v4hrwFPnR8ZmY9fmPW6Zh. Physical wallet approval and audible playback remain manual checks.',
+ 'Reload → resume   /   Switch payer → personal shop   /   Reset tracking → funds stay onchain');
+// 14
+code('Migrate a JSON-RPC call.','migration/ / RUNNABLE EXAMPLES',`pnpm migrate:legacy   # inspect the JSON-RPC error body
 pnpm migrate:grpc     # current balance through gRPC
 pnpm migrate:graphql  # structured indexed query
 
-// gRPC SDK shape used by the app:
-const { balance } = await client.getBalance({
-  owner: address, coinType: '0x2::sui::SUI'
-});
-// balance.balance includes coin and address balances.`, 'Run the three scripts in migration/. They show the old call and two replacements. Do not assume only renaming a method will migrate response types, pagination and error handling. In this SDK the unified balance includes address balance, which matters because faucet v3 and balance::send_funds can use that storage. Review every response shape against the installed SDK types. JSON-RPC availability depends on the provider. Source: '+SOURCES.migration+'; installed @mysten/sui 2.36.0.','Execute and read current state with gRPC. Query indexed history with GraphQL.');
-// 13
-cards('The lifecycle is part of the demo.','REFRESH / SWITCH / RESET / UPGRADE',[
-{label:'REFRESH',title:'Resume explicitly.',body:'Open till restores the saved per-shop position.'},
-{label:'SWITCH ACCOUNT',title:'Switch the shop too.',body:'A connected payer gets its own personal receiving address.',blue:true},
-{label:'RESET SESSION',title:'Clear tracking only.',body:'Existing onchain funds and wallet keys stay in place.'},
-{label:'UPGRADE',title:'Treat cursors carefully.',body:'Version local state. Rebuild if query semantics change.'}], 'Demo keys are local to this browser profile. Clearing site storage loses access to demo funds; the UI reset only clears receipts and cursor. If changing subscriptions, filters or storage formats, version snapshots and select an intentional historical opening checkpoint. Cursor compatibility is not guaranteed across arbitrary query changes. Rotating a payer or shop means funding and sharing a new address; keep old data for reconciliation. Shared server signing has been retired with HTTP 410.');
-// 14
-flow('Your turn: prove all four.','STUDENT CHALLENGE',[
-['Isolation','Two browsers show different shops'],['Payment','A receipt matches a real digest'],['Recovery','Pause, pay, resume and reload'],['History','Find the October 2025 receipt']], 'Give students several minutes. Ask them to report their own shop address and one transaction digest, not any private key. Bonus: test an address-balance deposit and compare live versus catch-up. Bonus: run the SQLite writer and restart it. If the faucet is rate-limited, use the linked public testnet faucet and refresh the balances. Do not silently substitute fake values.','day3-till.vercel.app   /   Pay, pause, recover, reload. Then inspect an old receipt.');
+// From migration/migrated-grpc.ts:
+const { balance } = await client.getBalance({ owner: SHOP });
+console.log('getBalance     ', balance);`,
+ 'Open the three files in migration/. The legacy SuiJsonRpcClient calls getBalance, getTransactionBlock and queryEvents. The gRPC replacement uses SuiGrpcClient and typed results. The GraphQL version shows both a shared client API and one query joining the selected balance, transaction and events data. Migrate the response shape, errors and pagination too. Do not reuse a legacy API cursor in the new API. Include both coin and address balances. Our gRPC event example normalizes the event type because short-form addresses were rejected. Use the installed SDK types, as older examples and individual documentation tables may lag new releases. Source: '+SOURCES.migration,
+ 'suix_getBalance → getBalance or Address.balance   /   Transaction and event examples included');
 // 15
-{const s=base('','TAKE IT WITH YOU','Close by asking students to explain the separation between sending a payment, receiving a live delivery and storing it durably. Live app: '+LIVE+'. Repository: '+REPO+'. The deck source, screenshots and test evidence are included under teaching/. Primary references: '+Object.values(SOURCES).join(' ; ')+'. Checked 15 October 2026. The connected-wallet boundary is checked with a Wallet Standard fixture; a physical wallet extension approval remains a manual classroom check.',C.dark);txt(s,'Make it live.\nMake it recover.',M,1.65,11.5,2.5,62,C.white);txt(s,'day3-till.vercel.app',M,4.7,11.5,.6,29,'9DADFF',{hyperlink:{url:LIVE}});txt(s,'github.com/Nuel-osas/day3-till',M,5.48,11.5,.42,19,C.dim,{hyperlink:{url:REPO}});txt(s,'YOUR NEXT BUILD / A LIVE FEED WITH A MEMORY',M,6.38,11.5,.25,11,C.dim,{fontFace:'JetBrains Mono'});}
+{
+ const s=flow('Now migrate one call in your own app.','THE ROOM’S PROJECTS / WORKSHOP',[
+ ['Find','Locate one JSON-RPC read or polling loop'],
+ ['Choose','gRPC, GraphQL, subscription or indexer'],
+ ['Replace','Port fields, response shape and pagination'],
+ ['Prove','Check results, reconnect and old-history behaviour']],
+ 'This is the advertised final workshop. Ask students to open a project they brought. If they have none, use Till’s migration folder. Choose one existing read, map it to the right data service, run both available paths against known data, inspect failure behaviour and record what changed. For polling screens, determine whether a subscription fits. For production, name the endpoint provider and quotas. The class deliverable is a working migrated call plus an explanation of the chosen data path. References are in the README, and verified testnet receipts are in teaching/VERIFICATION.md. Live app: '+LIVE+'. Repository: '+REPO+'.',
+ 'Deliverable: one working migrated call, with a clear reason for the chosen data service.');
+ txt(s,'day3-till.vercel.app',M,6.63,4.7,.25,12,C.blue,{hyperlink:{url:LIVE}});
+ txt(s,'github.com/Nuel-osas/day3-till',6.25,6.63,6.2,.25,12,C.blue,{hyperlink:{url:REPO}});
+}
 if(p._slides.length!==15)throw Error('Expected 15 slides');
 fs.mkdirSync(path.dirname(OUT),{recursive:true});
 p.writeFile({fileName:OUT}).then(()=>{fs.writeFileSync(path.join(path.dirname(OUT),'Day3-speaker-notes.md'),notes.map((n,i)=>`## ${String(i+1).padStart(2,'0')}. ${n.title}\n\n${n.note}\n`).join('\n'));console.log(OUT);});
