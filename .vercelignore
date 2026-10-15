@@ -7,3 +7,6 @@ node_modules
 *.db-*
 indexer
 migration
+
+teaching
+tests

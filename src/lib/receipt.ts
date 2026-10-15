@@ -36,7 +36,9 @@ export async function lookupReceipt(digest: string, url = GRAPHQL_URL): Promise<
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ query: RECEIPT_QUERY, variables: { digest } }),
+    signal: AbortSignal.timeout(30_000),
   });
+  if (!res.ok) throw new Error(`Receipt HTTP ${res.status}`);
   const json = await res.json();
   if (json.errors?.length) throw new Error(json.errors[0].message);
   return json.data.transaction;

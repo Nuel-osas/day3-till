@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "indexer": "node --env-file=.env --experimental-strip-types indexer/indexer.ts",
     "totals": "node --env-file=.env --experimental-strip-types indexer/totals.ts",
@@ -14,24 +14,29 @@
     "migrate:legacy": "node --experimental-strip-types migration/legacy-jsonrpc.ts",
     "migrate:grpc": "node --experimental-strip-types migration/migrated-grpc.ts",
     "migrate:graphql": "node --experimental-strip-types migration/migrated-graphql.ts",
-    "close": "node --env-file=.env --experimental-strip-types indexer/close.ts"
+    "close": "node --env-file=.env --experimental-strip-types indexer/close.ts",
+    "test": "tsx --test tests/*.test.ts",
+    "slides": "node teaching/generate-slides.cjs"
   },
   "dependencies": {
-    "@mysten/sui": "^2.35.0",
+    "@mysten/dapp-kit-react": "2.1.39",
+    "@mysten/sui": "^2.36.0",
     "qrcode.react": "^4.2.0",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
-    "@types/node": "^26.6.5",
+    "@types/node": "^24.19.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vercel/node": "^23.0.1",
     "@vitejs/plugin-react": "^6.1.2",
-    "typescript": "^7.0.2",
+    "pptxgenjs": "4.0.1",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
     "vite": "^8.3.4"
   },
   "engines": {
-    "node": ">=22.6"
+    "node": "24.x"
   }
 }

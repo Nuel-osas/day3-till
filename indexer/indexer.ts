@@ -10,6 +10,8 @@ const shop = normalize(process.env.SHOP_ADDRESS ?? process.env.VITE_SHOP_ADDRESS
 if (shop === normalize('')) throw new Error('set SHOP_ADDRESS');
 
 const db = openDb();
+const existing = db.prepare('SELECT shop FROM watermark LIMIT 1').get() as { shop: string } | undefined;
+if (existing && existing.shop !== shop) throw new Error('Use a separate TILL_DB file for each shop.');
 const insert = db.prepare(`INSERT OR IGNORE INTO payments (digest, coin_type, amount, sender, checkpoint, ts, cursor)
                            VALUES (?, ?, ?, ?, ?, ?, ?)`);
 const saveCursor = db.prepare(`INSERT INTO watermark (shop, cursor, updated_at) VALUES (?, ?, ?)

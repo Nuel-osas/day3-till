@@ -9,18 +9,15 @@ export const SUI_TYPE = '0x00000000000000000000000000000000000000000000000000000
 // Select only what the screen needs. Every edge carries a cursor for resumption.
 export const PAYMENTS_SUBSCRIPTION = /* GraphQL */ `
 subscription Till($shop: SuiAddress!, $after: String, $afterCheckpoint: UInt53) {
-  transactions(filter: { affectedAddress: $shop, afterCheckpoint: $afterCheckpoint }, after: $after) {
+  transactions(
+    filter: { affectedAddress: $shop, afterCheckpoint: $afterCheckpoint }, after: $after
+  ) {
     cursor
     node {
-      digest
-      sender { address }
+      digest sender { address }
       effects {
-        status
-        timestamp
-        checkpoint { sequenceNumber }
-        balanceChanges(first: 50) {
-          nodes { owner { address } coinType { repr } amount }
-        }
+        status timestamp checkpoint { sequenceNumber }
+        balanceChanges(first: 50) { nodes { owner { address } coinType { repr } amount } }
       }
     }
   }
@@ -60,17 +57,19 @@ export function paymentsFrom(delivery: Delivery, shop: string): Payment[] {
   const { cursor, node } = delivery.transactions;
   if (node.effects.status !== 'SUCCESS') return [];
   const me = normalize(shop);
-  return node.effects.balanceChanges.nodes
-    .filter((c) => c.owner && normalize(c.owner.address) === me && BigInt(c.amount) > 0n)
-    .map((c) => ({
-      digest: node.digest,
-      cursor,
-      coinType: c.coinType.repr,
-      amount: c.amount,
-      sender: node.sender?.address ?? 'system',
-      checkpoint: Number(node.effects.checkpoint.sequenceNumber),
-      timestamp: node.effects.timestamp,
-    }));
+  const net = new Map<string, bigint>();
+  for (const c of node.effects.balanceChanges.nodes) {
+    if (c.owner && normalize(c.owner.address) === me) {
+      const [address, ...rest] = c.coinType.repr.split('::');
+      const type = [normalize(address), ...rest].join('::');
+      net.set(type, (net.get(type) ?? 0n) + BigInt(c.amount));
+    }
+  }
+  return [...net].filter(([, amount]) => amount > 0n).map(([coinType, amount]) => ({
+    digest: node.digest, cursor, coinType, amount: String(amount),
+    sender: node.sender?.address ?? 'system',
+    checkpoint: Number(node.effects.checkpoint.sequenceNumber), timestamp: node.effects.timestamp,
+  }));
 }
 
 export type CoinMeta = { decimals: number; symbol: string };
@@ -88,6 +87,7 @@ export async function coinMeta(coinType: string): Promise<CoinMeta> {
     }),
   });
   const json = await res.json();
+  if (!res.ok || json.errors?.length) throw new Error('Coin metadata unavailable');
   const m = json.data?.coinMetadata;
   const meta = m ? { decimals: m.decimals, symbol: m.symbol } : { decimals: 0, symbol: coinType.split('::').pop() ?? '?' };
   metaCache.set(coinType, meta);
