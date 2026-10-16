@@ -1,4 +1,4 @@
-// Editable 18-slide lesson. Run pnpm slides; render with teaching/RENDERING.md.
+// Editable 11-slide lesson. Run pnpm slides; render with teaching/RENDERING.md.
 const pptxgen = require('pptxgenjs'), fs = require('node:fs'), path = require('node:path');
 const ROOT=path.resolve(__dirname,'..');
 const OUT=process.env.SLIDES_OUT||path.join(__dirname,'Day3_Real_Time_Sui.pptx');
@@ -13,8 +13,8 @@ const S={
 const p=new pptxgen();p.layout='LAYOUT_WIDE';
 p.author='Ruru | SuiHub Lagos';p.company='SuiHub Lagos';p.lang='en-GB';
 p.title='Real-Time Sui: GraphQL Subscriptions and the Data Stack After JSON-RPC';
-p.subject='Day 3 / 18-slide teaching edition / 16 October 2026';
-const TOTAL=18;
+p.subject='Day 3 / 11-slide teaching edition / 16 October 2026';
+const TOTAL=11;
 p.theme={headFontFace:'DM Sans',bodyFontFace:'DM Sans',lang:'en-GB'};
 const C={dark:'07080F',blue:'2338FF',paper:'F4F5F8',white:'FFFFFF',ink:'131725',muted:'65708B',pale:'E8ECFF',dim:'B7C3E2',green:'078256',red:'B93A4B',amber:'89551C',cream:'FFF0DA'};
 const W=13.333333,M=.75,notes=[];
@@ -56,7 +56,7 @@ const snippet=(source,start,end)=>{const a=source.indexOf(start),b=source.indexO
  show:'Open the live app and repository before class. Ask students to keep a project with a JSON-RPC read ready. Use Node 24 for the supplied repository, pnpm and testnet funds. No Move code is required.',
  ask:'Which part of your app still polls or uses JSON-RPC?',
  answer:'Collect one example from a wallet, game, payments screen or backend. Return to it on the final slide.',
- next:'Separate the data responsibilities that used to sit behind one familiar API.'},true);
+ next:'Start with the whole Sui stack as it stands after Basecamp.'},true);
  text(s,'GraphQL Subscriptions\nand the Data Stack After JSON-RPC',M,2.05,11.8,1.5,37,C.dim);
  [['01 / CHOOSE','Map the data stack'],['02 / BUILD','A feed that survives a drop'],['03 / MIGRATE','One call in your own app']].forEach((a,i)=>{const x=M+i*4.04;box(s,x,4.52,3.75,1.6,i===1?C.blue:'141B32');mono(s,a[0],x+.2,4.74,3.3,.25,11,C.dim);text(s,a[1],x+.2,5.08,3.3,.85,23,C.white);});
  text(s,'A payment screen is the worked example for the whole lesson.',M,6.46,11.8,.35,19,C.dim);
@@ -135,13 +135,13 @@ const snippet=(source,start,end)=>{const a=source.indexOf(start),b=source.indexO
  show:'Classify a screen: read the balance, observe a new payment, retrieve an old receipt. The same app can use more than one interface.',
  ask:'Would replacing every JSON-RPC URL with one GraphQL URL complete a migration?',
  answer:'No. Request types, selected fields, response shapes, errors, pagination and streaming transport must be adapted.',
- next:'Place those interfaces on a map, including the services behind them.',refs:S.migration+' ; '+S.launch});
+ next:'The newest piece of that map: subscribe to exactly the activity you need.',refs:S.migration+' ; '+S.launch});
  text(s,'Start with what the screen or worker needs to do.',M,2.13,11.8,.45,23,C.muted);
  rows(s,[['APP NEED','REPLACEMENT PATH','TILL EXAMPLE'],['State + execution','gRPC','Read balances; submit a payment'],['Filtered activity','GraphQL query + subscription','Load receipts; receive new ones'],['Pruned history','Archive / backed GraphQL','Find an old transaction by digest']],{y:2.95,height:.78,first:2.8,second:4.15,font:19});
  bar(s,'July: Foundation mainnet shutoff   →   September: GraphQL subscriptions   →   Migrate each call',6.42);
 }
-// 03
-{
+// 03 (cut from the 11-slide edition; flip to { to restore)
+if(0){
  const s=base('Where each piece sits in the data stack.','1 / ARCHITECTURE + WORKLOAD CHOICES',{
  explain:'Read the upper path left to right: finalized Sui data reaches services; GraphQL selects and resolves the app view. The archive supplies retained history when configured. A custom indexer is an alternative owned processing path, not a mandatory layer for every frontend. A wallet can combine direct gRPC operations and GraphQL activity. These boxes describe our chosen architecture, not exclusive capabilities of each protocol.',
  show:'Trace a live payment through gRPC checkpoint data to the GraphQL subscription and browser. Trace a historical point lookup through the archive. Point to the lower custom-indexer path for owned analytics.',
@@ -158,8 +158,8 @@ const snippet=(source,start,end)=>{const a=source.indexOf(start),b=source.indexO
  box(s,M,5.34,11.83,.98,C.white);
  text(s,'Wallet: state + activity     Shop: filtered receipts\nGame: actions + domain events     Analytics: custom checkpoint processing',M+.2,5.45,11.4,.76,20);
 }
-// 04
-{
+// 04 (cut from the 11-slide edition; flip to { to restore)
+if(0){
  const s=base('Till: follow one payment all the way through.','2 / THE ANNOUNCED BUILD',{
  explain:'The event promises a USDC shop screen. Use an illustrative 1 USDC sale: customer authorizes transfer, shop receives it, subscription delivers the receipt, durable writer records it for totals. Gas is in SUI. These are target behaviours, not a claim that the existing browser form sends USDC.',
  show:'Open the live app. Its built-in payment form and balance cards are SUI-only. Verified SUI paths cover live delivery, recovery, deduplication and the ledger. A funded USDC acceptance run remains unfinished. State this before using the SUI fallback. The receiver and writer accept generic coin types, but a USDC till should restrict accepted coin type and use metadata decimals.',
@@ -170,8 +170,8 @@ const snippet=(source,start,end)=>{const a=source.indexOf(start),b=source.indexO
  text(s,'Then disconnect, recover, total the day and look up an old receipt.',M,5.55,11.8,.65,22);
  bar(s,'Target: USDC. Current live app: SUI verified; a funded USDC walkthrough is still pending.',6.42,C.amber,C.cream);
 }
-// 05
-{
+// 05 (cut from the 11-slide edition; flip to { to restore)
+if(0){
  const s=base('Filter for the activity your app needs.','2 / TRANSACTIONS VS EVENTS',{
  explain:'A transaction subscription gives effects such as balance changes. An event subscription gives emitted application data, when a contract emits that event. Till requires no new payment event or Move contract. Affected address is broad: sender, sponsor or recipient may match. Exact field names below were checked against testnet on 16 October.',
  show:'Open PAYMENTS_SUBSCRIPTION in src/lib/till.ts and compare EventFilter in the live IDE. The current schema rejects module and type together in one event filter. The transaction sender field is sentAddress; the event sender field is sender.',
@@ -237,16 +237,16 @@ const snippet=(source,start,end)=>{const a=source.indexOf(start),b=source.indexO
  explain:'A, B, C and D are illustrative teaching labels, not real digests or cursor encodings. Save A and cursor cA. Disconnect while B and C finalize. Reconnect with after cA. The service delivers B and C, then D live. With no cursor yet, a saved opening checkpoint supplies the first boundary through filter.afterCheckpoint, which is exclusive.',
  show:'Chain progress continues while the listener is offline. Use Pause feed for the controlled demo. Save the opening checkpoint before the first stream and first payment. Never decode or invent cursors. Scope state to network, shop and query. Within a checkpoint, transactions follow their position; events follow transaction position then event position.',
  ask:'B reaches the browser but its database commit fails. Which cursor is safe to save?',
- answer:'Keep cA. Replay B on reconnect. The cursor must describe durably processed data, not merely received bytes.',
- next:'Make the database commit and cursor update one operation.',refs:S.schema+' ; src/useTill.ts; indexer/indexer.ts'});
+ answer:'Keep cA. Replay B on reconnect. The cursor must describe durably processed data, not merely received bytes. Replays are safe because each receipt is stored once by its digest (plus coin type), and in the SQLite writer the rows and the cursor commit in one transaction.',
+ next:'Now run the whole journey yourself in the lab.',refs:S.schema+' ; src/useTill.ts; indexer/indexer.ts'});
  [['A / cp 100','Delivered + saved'],['B / cp 101','Finalizes offline'],['C / cp 101','Finalizes offline'],['D / cp 102','Continues live']].forEach((a,i)=>{const x=M+i*3.02,blue=i===0||i===3;box(s,x,2.5,2.76,1.1,blue?C.blue:C.white);mono(s,a[0],x+.18,2.7,2.4,.25,14,blue?C.white:C.blue);text(s,a[1],x+.18,3.09,2.4,.3,16,blue?C.dim:C.muted);if(i<3)arrow(s,x+2.79,3.0,.2);});
  box(s,3.77,3.84,5.78,.5,C.cream);text(s,'LISTENER OFFLINE',3.77,3.92,5.78,.3,15,C.amber,{align:'center'});
  text(s,'Saved cA',M,4.77,2.5,.45,23);text(s,'Reconnect: after = cA',3.77,4.77,5.78,.45,23);text(s,'B → C → D',10.0,4.77,2.6,.45,23,C.blue);
  text(s,'No cursor yet? Save the opening checkpoint, then use filter.afterCheckpoint.',M,5.6,11.8,.42,20);
  bar(s,'Order: checkpoint → transaction position → event position. Persist before advancing.',6.27);
 }
-// 09
-{
+// 09 (cut from the 11-slide edition; flip to { to restore)
+if(0){
  const s=base('Replay safely. Count each receipt once.','2 / A TYPESCRIPT WRITER + SQLITE OR POSTGRES',{
  explain:'Two guarantees matter. A unique receipt key prevents duplicate counting. One database transaction commits rows and progress together. The repo uses PRIMARY KEY (digest, coin_type) and INSERT OR IGNORE; a cursor-only receipt key is insufficient when one transaction credits several coins. The cursor is a progress watermark. Postgres needs the same atomicity and uniqueness.',
  show:'Open indexer/db.ts and indexer/indexer.ts. The real source rolls back on failure, and saves the cursor even if a matching transaction has no incoming payment. The displayed code is the transaction body; catch/ROLLBACK follows it. Run pnpm indexer, stop it, pay, restart, then pnpm totals with the UTC date. The verified SUI ledger kept three receipts totalling 0.03 SUI without duplication.',
@@ -264,8 +264,8 @@ const snippet=(source,start,end)=>{const a=source.indexOf(start),b=source.indexO
  bar(s,'pnpm indexer  →  stop  →  pay  →  restart  →  pnpm totals 2026-10-16',6.2);
  text(s,'Totals come from durable rows, grouped by coin and UTC day, using BigInt base units.',M,6.77,11.8,.22,13,C.muted);
 }
-// 10
-{
+// 10 (cut from the 11-slide edition; flip to { to restore)
+if(0){
  const s=base('When does a small writer stop being enough?','2 / THE CUSTOM INDEXING DECISION',{
  explain:'The announcement offers subscriptions as a lighter path for apps that do not need a full pipeline. Choose by workload. A selected feed can use TypeScript and SQLite or Postgres. Broad checkpoint processing, controlled reprocessing and owned models can justify the Rust framework. There is no universal throughput threshold.',
  show:'Compare the paths. In the custom framework, process transforms checkpoint data, commit stores results, and prune can enforce retention. This class does not implement Rust. The supplied TypeScript writer is a long-running local process, separate from the Vercel browser app.',
@@ -277,8 +277,8 @@ const snippet=(source,start,end)=>{const a=source.indexOf(start),b=source.indexO
  bar(s,'Decide from coverage, processing cost and operational ownership; measure before scaling.',6.32);
 }
 
-// 11
-{
+// 11 (cut from the 11-slide edition; flip to { to restore)
+if(0){
  const digest='ArCwXsZUTywBuM4GbNX4CVMERmBBgeYY2mgmJJjdHa3a';
  const s=base('An old receipt needs retained history.','2 / ARCHIVE LOOKUP',{
  explain:'Full nodes may prune history. A full-node gRPC endpoint does not automatically route every old lookup to the archive. The separate archival service supports retained point lookups; a GraphQL operator can configure an archive-backed path. Finding one digest differs from scanning every historical payment.',
@@ -293,8 +293,8 @@ const snippet=(source,start,end)=>{const a=source.indexOf(start),b=source.indexO
  arrow(s,6.2,4.66,.35);
  bar(s,'pnpm receipt   /   Full node retention and archival history serve different needs.',6.3);
 }
-// 12
-{
+// 12 (cut from the 11-slide edition; flip to { to restore)
+if(0){
  const s=base('Build for limits, reconnects and changes.','2 / PRODUCTION + REAL GOTCHAS',{
  explain:'Limits belong to a service. Testnet serviceConfig was rechecked on 16 October: query payload 5000 bytes, query timeout 40 seconds, Query.transactions default page 20 and max 50. These are query settings, not stream lifetime. Per-subscriber throttling can slow or end a stream; it does not follow a fixed threshold inferred from those numbers.',
  show:'Read serviceConfig in the IDE. Ask a production provider about POST SSE, auth, quotas, retention and downtime. Bound consumer work and retry with backoff from committed progress. In Till, a shop change cancels the old connection and switches stored state. Reset clears tracking, not onchain funds. A query version change needs a deliberate replay boundary.',
@@ -309,7 +309,7 @@ const snippet=(source,start,end)=>{const a=source.indexOf(start),b=source.indexO
 {
  const s=base('Lab: prove each part of the payment journey.','2 / BUILD TILL AND TRY TO BREAK IT',{
  explain:'Use the verified test-SUI fallback explicitly. The event target remains USDC. A funded USDC run, physical wallet approval and audible chime are not yet verified. This runbook does not claim those checks passed. Every student has a separate payer and shop.',
- show:'1. Clone the repo; use Node 24, pnpm install and pnpm dev, or open the live app. Copy your shop. Request test SUI. Enable sound with a click.\n2. Open till and send 0.01 SUI. Match digest, receipt and red/green balance movement; payer pays gas. Check the chime audibly.\n3. Pause feed, pay again, Resume. This stops only the listener. For real Wi-Fi loss, use a second device to pay while the till device is offline. The disconnected device cannot submit a network transaction.\n4. Reload and reopen; expect no duplicate.\n5. Copy .env.example, set SHOP_ADDRESS, FROM_CHECKPOINT to the opening boundary, and separate TILL_DB. Run pnpm indexer. Stop, pay, restart, run pnpm totals. Never share a database across shops.\n6. Use slide 14’s old receipt. Record each result. Browser totals alone do not validate the database writer.',
+ show:'1. Clone the repo; use Node 24, pnpm install and pnpm dev, or open the live app. Copy your shop. Request test SUI. Enable sound with a click.\n2. Open till and send 0.01 SUI. Match digest, receipt and red/green balance movement; payer pays gas. Check the chime audibly.\n3. Pause feed, pay again, Resume. This stops only the listener. For real Wi-Fi loss, use a second device to pay while the till device is offline. The disconnected device cannot submit a network transaction.\n4. Reload and reopen; expect no duplicate.\n5. Copy .env.example, set SHOP_ADDRESS, FROM_CHECKPOINT to the opening boundary, and separate TILL_DB. Run pnpm indexer. Stop, pay, restart, run pnpm totals. Never share a database across shops.\n6. Use the Receipt archive panel with digest ArCwXsZUTywBuM4GbNX4CVMERmBBgeYY2mgmJJjdHa3a (7 October 2025, checkpoint 250000000): the public full node says not found, GraphQL finds it, because full-node gRPC does not fall back to the archive. Record each result. Browser totals alone do not validate the database writer.',
  ask:'Why does the Wi-Fi-drop test need a second device?',
  answer:'Only the listener is offline; the payer still needs network access.',
  next:'Apply these data decisions to an existing JSON-RPC integration.',refs:'README.md; teaching/VERIFICATION.md'});
@@ -350,7 +350,7 @@ const snippet=(source,start,end)=>{const a=source.indexOf(start),b=source.indexO
 if(p._slides.length!==TOTAL)throw Error('Expected exactly '+TOTAL+' slides');
 const preface=[
  '# Day 3: Real-Time Sui','',
- 'Teaching edition: 16 October 2026. Exactly 18 slides.','',
+ 'Teaching edition: 16 October 2026. Exactly 11 slides.','',
  '## Before class','',
  '- The event target is USDC. The browser form sends SUI; a funded USDC end-to-end run has not passed. Disclose the test-SUI fallback. The target diagram is not verified USDC behaviour.',
  '- Use Day3_Real_Time_Sui.pptx, not the original October 12 Day3_Till_Live_Data.pptx. The lesson follows: choose the stack, build a reliable feed, then migrate an existing app.',
@@ -358,7 +358,7 @@ const preface=[
  '- Run the SQLite writer separately. Save the opening checkpoint before payments. The writer is not a long-running Vercel worker.',
  '- For real Wi-Fi loss, pay from a second device while the listening device is offline. Pause feed is the controlled listener-only equivalent.',
  '- Check chime through a user gesture and physical wallet approval. These remain manual checks.',
- '- Slide 1: the promise. Slides 2-3: the Sui stack after Basecamp (7 to 8 October). Slide 4: who serves Sui data now. Slides 5-6: choose the data stack. Slides 7-15: explain and build the data path. Slide 16: full lab. Slides 17-18: migration.','',
+ '- Slide 1: the promise. Slides 2-3: the Sui stack after Basecamp (7 to 8 October). Slide 4: who serves Sui data now. Slide 5: which service answers which read. Slides 6-8: subscriptions, the SSE transport and cursors. Slide 9: lab. Slides 10-11: migration.','',
  '## Additional gotchas to explain during the lab','',
  '- HTTP 200 can contain GraphQL or JSON-RPC errors. Inspect the body.',
  '- Coin transfers arrived live; an address-balance deposit arrived after catch-up. Retest provider behaviour; this is not a permanent protocol rule.',

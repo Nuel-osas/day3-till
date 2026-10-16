@@ -1,6 +1,6 @@
 # Day 3: Real-Time Sui
 
-Teaching edition: 16 October 2026. Exactly 18 slides.
+Teaching edition: 16 October 2026. Exactly 11 slides.
 
 ## Before class
 
@@ -10,7 +10,7 @@ Teaching edition: 16 October 2026. Exactly 18 slides.
 - Run the SQLite writer separately. Save the opening checkpoint before payments. The writer is not a long-running Vercel worker.
 - For real Wi-Fi loss, pay from a second device while the listening device is offline. Pause feed is the controlled listener-only equivalent.
 - Check chime through a user gesture and physical wallet approval. These remain manual checks.
-- Slide 1: the promise. Slides 2-3: the Sui stack after Basecamp (7 to 8 October). Slide 4: who serves Sui data now. Slides 5-6: choose the data stack. Slides 7-15: explain and build the data path. Slide 16: full lab. Slides 17-18: migration.
+- Slide 1: the promise. Slides 2-3: the Sui stack after Basecamp (7 to 8 October). Slide 4: who serves Sui data now. Slide 5: which service answers which read. Slides 6-8: subscriptions, the SSE transport and cursors. Slide 9: lab. Slides 10-11: migration.
 
 ## Additional gotchas to explain during the lab
 
@@ -49,7 +49,7 @@ EXPECTED ANSWER
 Collect one example from a wallet, game, payments screen or backend. Return to it on the final slide.
 
 TRANSITION
-Separate the data responsibilities that used to sit behind one familiar API.
+Start with the whole Sui stack as it stands after Basecamp.
 
 ## 02. The Sui stack, after Basecamp.
 
@@ -126,69 +126,12 @@ EXPECTED ANSWER
 No. Request types, selected fields, response shapes, errors, pagination and streaming transport must be adapted.
 
 TRANSITION
-Place those interfaces on a map, including the services behind them.
+The newest piece of that map: subscribe to exactly the activity you need.
 
 REFERENCES
 https://docs.sui.io/develop/accessing-data/json-rpc-migration ; https://www.sui.io/blog/graphql-on-sui-now-supports-real-time-subscriptions
 
-## 06. Where each piece sits in the data stack.
-
-EXPLAIN
-Read the upper path left to right: finalized Sui data reaches services; GraphQL selects and resolves the app view. The archive supplies retained history when configured. A custom indexer is an alternative owned processing path, not a mandatory layer for every frontend. A wallet can combine direct gRPC operations and GraphQL activity. These boxes describe our chosen architecture, not exclusive capabilities of each protocol.
-
-SHOW / DO
-Trace a live payment through gRPC checkpoint data to the GraphQL subscription and browser. Trace a historical point lookup through the archive. Point to the lower custom-indexer path for owned analytics.
-
-ASK THE ROOM
-Does a hosted GraphQL subscription mean there is no indexing infrastructure?
-
-EXPECTED ANSWER
-The provider runs the data service. The app avoids operating a full indexing pipeline merely to consume a feed.
-
-TRANSITION
-Apply the map to the shop workflow promised in the announcement.
-
-REFERENCES
-https://www.sui.io/blog/graphql-on-sui-now-supports-real-time-subscriptions ; https://docs.sui.io/develop/accessing-data/custom-indexer
-
-## 07. Till: follow one payment all the way through.
-
-EXPLAIN
-The event promises a USDC shop screen. Use an illustrative 1 USDC sale: customer authorizes transfer, shop receives it, subscription delivers the receipt, durable writer records it for totals. Gas is in SUI. These are target behaviours, not a claim that the existing browser form sends USDC.
-
-SHOW / DO
-Open the live app. Its built-in payment form and balance cards are SUI-only. Verified SUI paths cover live delivery, recovery, deduplication and the ledger. A funded USDC acceptance run remains unfinished. State this before using the SUI fallback. The receiver and writer accept generic coin types, but a USDC till should restrict accepted coin type and use metadata decimals.
-
-ASK THE ROOM
-Which proves the shop was paid: the send button, a balance refresh, or the confirmed receipt?
-
-EXPECTED ANSWER
-Use the successful onchain transaction and positive shop balance change. The submit result and balance card alone do not identify a sale.
-
-TRANSITION
-Choose the subscription that provides the receipt evidence.
-
-## 08. Filter for the activity your app needs.
-
-EXPLAIN
-A transaction subscription gives effects such as balance changes. An event subscription gives emitted application data, when a contract emits that event. Till requires no new payment event or Move contract. Affected address is broad: sender, sponsor or recipient may match. Exact field names below were checked against testnet on 16 October.
-
-SHOW / DO
-Open PAYMENTS_SUBSCRIPTION in src/lib/till.ts and compare EventFilter in the live IDE. The current schema rejects module and type together in one event filter. The transaction sender field is sentAddress; the event sender field is sender.
-
-ASK THE ROOM
-The shop refunds a customer. Does affectedAddress still match?
-
-EXPECTED ANSWER
-Yes. A match is a candidate. Receipt logic must check success and balance-change direction.
-
-TRANSITION
-Select enough fields to validate the candidate and render a receipt.
-
-REFERENCES
-https://github.com/MystenLabs/sui/blob/main/crates/sui-indexer-alt-graphql/schema.graphql ; teaching/evidence/graphql-schema-2026-10-16.json
-
-## 09. A matching transaction becomes a receipt.
+## 06. A matching transaction becomes a receipt.
 
 EXPLAIN
 This is the full repository subscription, with whitespace adjusted. Cursor is delivery progress. Digest identifies the transaction. Status rejects failures. Owner, coin type and signed amount let the client calculate the shop credit. Checkpoint and timestamp place the receipt in history.
@@ -208,7 +151,7 @@ The query describes what we want. Open a connection that keeps delivering it.
 REFERENCES
 src/lib/till.ts
 
-## 10. One POST request. Many SSE deliveries.
+## 07. One POST request. Many SSE deliveries.
 
 EXPLAIN
 The request sends the GraphQL document and variables as JSON. The response stays open and sends SSE frames over POST /graphql/subscriptions. Native EventSource cannot send this POST body; websocket clients use a different protocol. Fetch exposes a readable stream.
@@ -228,7 +171,7 @@ A stream can end. Keep the position from which we can safely resume.
 REFERENCES
 src/lib/sse.ts; tests/
 
-## 11. The connection drops. The payments do not.
+## 08. The connection drops. The payments do not.
 
 EXPLAIN
 A, B, C and D are illustrative teaching labels, not real digests or cursor encodings. Save A and cursor cA. Disconnect while B and C finalize. Reconnect with after cA. The service delivers B and C, then D live. With no cursor yet, a saved opening checkpoint supplies the first boundary through filter.afterCheckpoint, which is exclusive.
@@ -240,95 +183,15 @@ ASK THE ROOM
 B reaches the browser but its database commit fails. Which cursor is safe to save?
 
 EXPECTED ANSWER
-Keep cA. Replay B on reconnect. The cursor must describe durably processed data, not merely received bytes.
+Keep cA. Replay B on reconnect. The cursor must describe durably processed data, not merely received bytes. Replays are safe because each receipt is stored once by its digest (plus coin type), and in the SQLite writer the rows and the cursor commit in one transaction.
 
 TRANSITION
-Make the database commit and cursor update one operation.
+Now run the whole journey yourself in the lab.
 
 REFERENCES
 https://github.com/MystenLabs/sui/blob/main/crates/sui-indexer-alt-graphql/schema.graphql ; src/useTill.ts; indexer/indexer.ts
 
-## 12. Replay safely. Count each receipt once.
-
-EXPLAIN
-Two guarantees matter. A unique receipt key prevents duplicate counting. One database transaction commits rows and progress together. The repo uses PRIMARY KEY (digest, coin_type) and INSERT OR IGNORE; a cursor-only receipt key is insufficient when one transaction credits several coins. The cursor is a progress watermark. Postgres needs the same atomicity and uniqueness.
-
-SHOW / DO
-Open indexer/db.ts and indexer/indexer.ts. The real source rolls back on failure, and saves the cursor even if a matching transaction has no incoming payment. The displayed code is the transaction body; catch/ROLLBACK follows it. Run pnpm indexer, stop it, pay, restart, then pnpm totals with the UTC date. The verified SUI ledger kept three receipts totalling 0.03 SUI without duplication.
-
-ASK THE ROOM
-The process crashes after COMMIT but before logging success. What happens?
-
-EXPECTED ANSWER
-Rows and cursor are durable. Replaying cannot add the same digest and coin again.
-
-TRANSITION
-Decide when this writer is enough and when to own a checkpoint pipeline.
-
-REFERENCES
-indexer/db.ts; indexer/indexer.ts; indexer/totals.ts
-
-## 13. When does a small writer stop being enough?
-
-EXPLAIN
-The announcement offers subscriptions as a lighter path for apps that do not need a full pipeline. Choose by workload. A selected feed can use TypeScript and SQLite or Postgres. Broad checkpoint processing, controlled reprocessing and owned models can justify the Rust framework. There is no universal throughput threshold.
-
-SHOW / DO
-Compare the paths. In the custom framework, process transforms checkpoint data, commit stores results, and prune can enforce retention. This class does not implement Rust. The supplied TypeScript writer is a long-running local process, separate from the Vercel browser app.
-
-ASK THE ROOM
-You need all swaps across many packages and a year of recomputed aggregates. Which path fits?
-
-EXPECTED ANSWER
-Investigate an owned checkpoint pipeline and a database designed for the aggregates; benchmark processing and recovery.
-
-TRANSITION
-Even a small app needs a path beyond full-node retention.
-
-REFERENCES
-https://docs.sui.io/develop/accessing-data/custom-indexer
-
-## 14. An old receipt needs retained history.
-
-EXPLAIN
-Full nodes may prune history. A full-node gRPC endpoint does not automatically route every old lookup to the archive. The separate archival service supports retained point lookups; a GraphQL operator can configure an archive-backed path. Finding one digest differs from scanning every historical payment.
-
-SHOW / DO
-Run pnpm receipt or use Receipt archive. On 15 October this exact testnet digest returned not found from the public full node, while GraphQL returned SUCCESS at 2025-10-07T22:04:44.571Z and checkpoint 250000000. The app retains the digest and labels the source. A random not-found response cannot establish pruning; compare network, digest and a known alternate result.
-
-ASK THE ROOM
-Does an archive lookup prove your local daily ledger is complete?
-
-EXPECTED ANSWER
-No. Completeness requires a starting boundary and successful processing over the needed range.
-
-TRANSITION
-Account for service limits and failures before production.
-
-REFERENCES
-https://docs.sui.io/develop/accessing-data/json-rpc-migration ; src/lib/receipt.ts; scripts/receipt.ts; teaching/VERIFICATION.md
-
-## 15. Build for limits, reconnects and changes.
-
-EXPLAIN
-Limits belong to a service. Testnet serviceConfig was rechecked on 16 October: query payload 5000 bytes, query timeout 40 seconds, Query.transactions default page 20 and max 50. These are query settings, not stream lifetime. Per-subscriber throttling can slow or end a stream; it does not follow a fixed threshold inferred from those numbers.
-
-SHOW / DO
-Read serviceConfig in the IDE. Ask a production provider about POST SSE, auth, quotas, retention and downtime. Bound consumer work and retry with backoff from committed progress. In Till, a shop change cancels the old connection and switches stored state. Reset clears tracking, not onchain funds. A query version change needs a deliberate replay boundary.
-
-ASK THE ROOM
-A balance rises but no receipt appears. What do you check?
-
-EXPECTED ANSWER
-Digest, success, network, shop, filter semantics, index lag and catch-up. A balance delta is not a receipt. The tested address-balance deposit appeared only after catch-up.
-
-TRANSITION
-Run the lab with an observable pass criterion for each step.
-
-REFERENCES
-teaching/evidence/graphql-schema-2026-10-16.json; teaching/VERIFICATION.md; https://docs.sui.io/develop/accessing-data/json-rpc-migration ; https://docs.sui.io/develop/accessing-data/graphql/query-with-graphql
-
-## 16. Lab: prove each part of the payment journey.
+## 09. Lab: prove each part of the payment journey.
 
 EXPLAIN
 Use the verified test-SUI fallback explicitly. The event target remains USDC. A funded USDC run, physical wallet approval and audible chime are not yet verified. This runbook does not claim those checks passed. Every student has a separate payer and shop.
@@ -339,7 +202,7 @@ SHOW / DO
 3. Pause feed, pay again, Resume. This stops only the listener. For real Wi-Fi loss, use a second device to pay while the till device is offline. The disconnected device cannot submit a network transaction.
 4. Reload and reopen; expect no duplicate.
 5. Copy .env.example, set SHOP_ADDRESS, FROM_CHECKPOINT to the opening boundary, and separate TILL_DB. Run pnpm indexer. Stop, pay, restart, run pnpm totals. Never share a database across shops.
-6. Use slide 14’s old receipt. Record each result. Browser totals alone do not validate the database writer.
+6. Use the Receipt archive panel with digest ArCwXsZUTywBuM4GbNX4CVMERmBBgeYY2mgmJJjdHa3a (7 October 2025, checkpoint 250000000): the public full node says not found, GraphQL finds it, because full-node gRPC does not fall back to the archive. Record each result. Browser totals alone do not validate the database writer.
 
 ASK THE ROOM
 Why does the Wi-Fi-drop test need a second device?
@@ -353,7 +216,7 @@ Apply these data decisions to an existing JSON-RPC integration.
 REFERENCES
 README.md; teaching/VERIFICATION.md
 
-## 17. Migrate the client, then check the response.
+## 10. Migrate the client, then check the response.
 
 EXPLAIN
 The old client calls getBalance over JSON-RPC. SuiGrpcClient exposes a typed balance wrapper. Adapt the response; do not reuse the old object shape blindly. Inspect totalBalance, coinBalance and addressBalance. The GraphQL alternative selects Address.balance and joins receipt and event data.
@@ -373,7 +236,7 @@ Each student migrates one call from a project they brought.
 REFERENCES
 migration/; https://docs.sui.io/develop/accessing-data/json-rpc-migration
 
-## 18. Your app: replace one call and prove it works.
+## 11. Your app: replace one call and prove it works.
 
 EXPLAIN
 The final workshop is on students’ own projects. Give students without a project Till’s migration folder. The deliverable is a working change, not a verbal claim of migration.
