@@ -1,4 +1,4 @@
-// Editable 15-slide lesson. Run pnpm slides; render with teaching/RENDERING.md.
+// Editable 18-slide lesson. Run pnpm slides; render with teaching/RENDERING.md.
 const pptxgen = require('pptxgenjs'), fs = require('node:fs'), path = require('node:path');
 const ROOT=path.resolve(__dirname,'..');
 const OUT=process.env.SLIDES_OUT||path.join(__dirname,'Day3_Real_Time_Sui.pptx');
@@ -13,7 +13,8 @@ const S={
 const p=new pptxgen();p.layout='LAYOUT_WIDE';
 p.author='Ruru | SuiHub Lagos';p.company='SuiHub Lagos';p.lang='en-GB';
 p.title='Real-Time Sui: GraphQL Subscriptions and the Data Stack After JSON-RPC';
-p.subject='Day 3 / 15-slide teaching edition / 16 October 2026';
+p.subject='Day 3 / 18-slide teaching edition / 16 October 2026';
+const TOTAL=18;
 p.theme={headFontFace:'DM Sans',bodyFontFace:'DM Sans',lang:'en-GB'};
 const C={dark:'07080F',blue:'2338FF',paper:'F4F5F8',white:'FFFFFF',ink:'131725',muted:'65708B',pale:'E8ECFF',dim:'B7C3E2',green:'078256',red:'B93A4B',amber:'89551C',cream:'FFF0DA'};
 const W=13.333333,M=.75,notes=[];
@@ -27,7 +28,7 @@ function base(title,part,note,dark=false){
  mono(s,'[ '+part.toUpperCase()+' ]',M,.48,11.8,.25,10,dark?C.dim:C.muted);
  text(s,title,M,.96,11.85,1.04,p._slides.length===1?56:35,dark?C.white:C.ink);
  mono(s,'ACCOUNT LAYER WEEK / SUIHUB LAGOS',M,7.08,8,.18,8,dark?C.dim:C.muted);
- mono(s,String(p._slides.length).padStart(2,'0')+' / 15',11.7,7.04,.9,.25,9,dark?C.dim:C.muted);
+ mono(s,String(p._slides.length).padStart(2,'0')+' / '+TOTAL,11.7,7.04,.9,.25,9,dark?C.dim:C.muted);
  const noteText=['EXPLAIN\n'+note.explain,'SHOW / DO\n'+note.show,'ASK THE ROOM\n'+note.ask,'EXPECTED ANSWER\n'+note.answer,'TRANSITION\n'+note.next,note.refs?'REFERENCES\n'+note.refs:''].filter(Boolean).join('\n\n');
  s.addNotes(noteText);notes.push({title,note:noteText});return s;
 }
@@ -54,11 +55,78 @@ const snippet=(source,start,end)=>{const a=source.indexOf(start),b=source.indexO
  explain:'Today has three connected outcomes: choose the right Sui data interface, build a reliable live feed through Till, and migrate a read in your own app. This is the advertised GraphQL subscriptions and post-JSON-RPC data-stack session. Till supplies a concrete problem for the architecture.',
  show:'Open the live app and repository before class. Ask students to keep a project with a JSON-RPC read ready. Use Node 24 for the supplied repository, pnpm and testnet funds. No Move code is required.',
  ask:'Which part of your app still polls or uses JSON-RPC?',
- answer:'Collect one example from a wallet, game, payments screen or backend. Return to it on slide 15.',
+ answer:'Collect one example from a wallet, game, payments screen or backend. Return to it on the final slide.',
  next:'Separate the data responsibilities that used to sit behind one familiar API.'},true);
  text(s,'GraphQL Subscriptions\nand the Data Stack After JSON-RPC',M,2.05,11.8,1.5,37,C.dim);
  [['01 / CHOOSE','Map the data stack'],['02 / BUILD','A feed that survives a drop'],['03 / MIGRATE','One call in your own app']].forEach((a,i)=>{const x=M+i*4.04;box(s,x,4.52,3.75,1.6,i===1?C.blue:'141B32');mono(s,a[0],x+.2,4.74,3.3,.25,11,C.dim);text(s,a[1],x+.2,5.08,3.3,.85,23,C.white);});
  text(s,'A payment screen is the worked example for the whole lesson.',M,6.46,11.8,.35,19,C.dim);
+}
+// 01b: the whole Sui stack as it stands after Basecamp, so the data lesson has context.
+{
+ const s=base('The Sui stack, after Basecamp.','0 / WHERE WE ARE / 16 OCTOBER 2026',{
+ explain:'Sui Basecamp ran in Singapore on 7 and 8 October. The theme was the agentic economy. Before we zoom into data, this is the whole stack as it stands today, layer by layer, with what a builder can actually touch. Days 1 and 2 of this week sit in the accounts and money row. Today sits in the data row, which every other row depends on.',
+ show:'Walk top to bottom. Apps and agents: Samsung Wallet brings gasless USDC on Sui to 82 million US Galaxy phones from the last week of October, with Bastion custody; Slush added deposits from 25 chains and yield; DeepBook App exposes an API for agents. Agent payments: Sui Agent Payments lets agents pay per call in stablecoins over HTTP 402 (x402 and MPP), with Alibaba Cloud as the first big partner; the gateway is on testnet and paid calls are invite only. Payment Kit and an open x402 facilitator are public. Sui Agent Pass (policies limiting what an agent can spend, enforced with Seal) was announced with no docs yet. Accounts and money: passkeys and address aliases (Day 1), native allowances (Day 2, testnet), address balances, and Circle CCTP V2 live for native USDC across 29 chains. Throughput: a 40.6M TPS peak inside 10,000+ programmable tunnels, offchain and settled to mainnet; no tunnels SDK yet. Data: JSON-RPC is off on Foundation nodes; gRPC, GraphQL with subscriptions (mainnet 21 September), the archive and the custom indexer replace it. Storage and privacy: Walrus, the new managed Walrus Console with an API and an MCP server, and Seal encryption. Infra and tools: AWS, Google Cloud and Alibaba Cloud for nodes, MystenLabs/skills and the Sui docs MCP.',
+ ask:'Which rows does your current app touch?',
+ answer:'Almost every app touches accounts and data. Agent apps add agent payments; media and AI apps add Walrus.',
+ next:'What does all this change for the way an app reads the chain?',
+ refs:'https://sui.io/basecamp ; https://sui.io/agentpayments ; https://www.sui.io/blog/graphql-on-sui-now-supports-real-time-subscriptions ; agentic-week/basecamp-2026-readout.md'});
+ rows(s,[
+  ['LAYER','WHAT IS THERE NOW','STATUS'],
+  ['Apps + agents','Samsung Wallet USDC (82M phones) · Slush · DeepBook App API','Live · Samsung late Oct'],
+  ['Agent payments','Agent Payments (x402, MPP, Alibaba Cloud) · Payment Kit · Agent Pass','Testnet · Pass announced'],
+  ['Accounts + money','Passkeys + aliases · allowances · address balances · USDC + CCTP V2','Live · allowances testnet'],
+  ['Throughput','Programmable Tunnels: 40.6M TPS offchain, settled to mainnet','Live · no SDK yet'],
+  ['Data  ← TODAY','gRPC · GraphQL + subscriptions · archive · indexer. JSON-RPC off','Live'],
+  ['Storage + privacy','Walrus · Walrus Console (API + MCP) · Seal encryption','Live'],
+  ['Infra + tools','AWS · Google Cloud · Alibaba Cloud nodes · Sui skills + docs MCP','Live'],
+ ],{y:2.12,height:.56,first:2.35,second:6.95,font:14});
+ text(s,'Day 1 and Day 2 built the accounts + money row. Today: the data row every other row reads from.',M,6.72,11.8,.25,12,C.muted);
+}
+// 01c: what Basecamp changes for an app's data layer.
+{
+ const s=base('What Basecamp changes for your data layer.','0 / WHY TODAY MATTERS MORE NOW',{
+ explain:'Basecamp did not ship a new data API; the data stack landed in July (JSON-RPC off) and September (subscriptions). What Basecamp changed is who reads the chain and how much. Six consequences for anyone building an app now.',
+ show:'One: agents are now clients. With Agent Payments an agent pays per call and acts on what it sees, so it needs a live feed instead of polling every few seconds. Two: Samsung Wallet puts gasless USDC on 82 million phones. A shop screen fed by those payments has to survive a Wi-Fi drop without losing a sale, which is the cursor lesson. Three: address balances and allowances move funds without a coin object. Watch balance changes in transaction effects, not coin objects. In our own tests an address-balance deposit appeared only after catch-up, so always backfill. Four: the 40.6M TPS run happened inside tunnels offchain; only settlements reach mainnet, so your feed sees the settlement, not every tunnel message. Five: Walrus Console and the Google Cloud Arbiter put files, agent memory and proofs on Walrus; index the pointer on Sui and fetch the blob from Walrus. Six: Sui named AWS, Google Cloud and Alibaba Cloud for nodes. Public endpoints are for development; production runs on a provider or your own node, with quotas you check.',
+ ask:'Which of the six hits your app first?',
+ answer:'For most of the room: live feeds and cursors (one and two). Payment apps also need three.',
+ next:'Map each kind of read to the service that should answer it.',
+ refs:'https://sui.io/agentpayments ; https://console.walrus.xyz ; agentic-week/basecamp-2026-readout.md ; teaching/VERIFICATION.md'});
+ [
+  ['AGENTS ARE CLIENTS','Agents read and pay per call','x402 + MPP. They need live feeds, not polling.'],
+  ['PHONE-SCALE PAYMENTS','82M wallets, gasless USDC','Receipts must survive drops: cursors.'],
+  ['MONEY WITHOUT COINS','Watch balance changes','Address balances and allowances skip coin objects.'],
+  ['TUNNELS','40.6M TPS stayed offchain','Your feed sees settlements, not each message.'],
+  ['DATA OFF CHAIN','Files, memory, proofs on Walrus','Index the pointer on Sui. Fetch from Walrus.'],
+  ['PRODUCTION','Public endpoints are for dev','Use a provider or cloud node. Check quotas.'],
+ ].forEach((a,i)=>{const x=M+(i%3)*4.02,y=2.12+Math.floor(i/3)*2.12,w=3.79,blue=i===0;
+  box(s,x,y,w,1.98,blue?C.blue:C.white);
+  mono(s,a[0],x+.22,y+.18,w-.44,.24,10,blue?'C4CEFF':C.blue);
+  text(s,a[1],x+.22,y+.5,w-.44,.74,20,blue?C.white:C.ink,{valign:'top'});
+  text(s,a[2],x+.22,y+1.3,w-.44,.56,15,blue?'E4E9FF':C.muted,{valign:'top'});});
+ bar(s,'Same lesson today: pick the right read path, stream it, never miss a payment.',6.42);
+}
+// 01d: who actually serves Sui data now.
+{
+ const s=base('Who serves Sui data now.','0 / DATA PROVIDERS / 16 OCTOBER 2026',{
+ explain:'The public Sui Foundation endpoints (fullnode, graphql and archive.mainnet.sui.io) are rate limited and meant for development and public-good access. The migration guide says not to point a production wallet, exchange or indexer at them: run your own full node or contract a provider. Providers now fall into three groups. Full stack: gRPC, GraphQL RPC and the Archival Store as a managed service. gRPC nodes: full-node gRPC only. Indexed data and streams: ready-made APIs and pipelines on top of the chain.',
+ show:'Full stack, per the docs table: QuickNode, Ankr, BlockPI, ZAN, Inodra and Triton One offer gRPC, GraphQL and archive on mainnet; ZAN lists all three on testnet too. NodeInfra and 01.ro offer gRPC and GraphQL without archive. The Sui blog named QuickNode, Ankr, BlockPI and ZAN as the four launch partners for the full stack. gRPC only: Alchemy, Dwellir, BlockVision, Natsai, GetBlock. Indexed data and streams, from the Sui Foundation awesome-sui list: Sentio (custom processors), Surflux (APIs and real-time streams), BlockVision (token, NFT and DeFi APIs), Blockberry (Suiscan API), Space and Time (verifiable warehouse), ZettaBlock (SQL to GraphQL or REST), Birdeye (market data), Dubhe Indexer (config-driven events). Honesty points: most providers list GraphQL on mainnet only; the docs still say GraphQL does not support subscriptions, which is out of date (we stream them live on testnet and mainnet), and we have not tested subscriptions on any provider, so ask each one. Archive: full-node gRPC never falls back to the archive, so gRPC clients call an archival endpoint directly.',
+ ask:'Your app needs live payments plus a two-year-old receipt. What do you ask a provider?',
+ answer:'Do you serve GraphQL subscriptions over SSE, on which networks, and is the archive connected to your GraphQL or a separate gRPC endpoint? Then quotas and price.',
+ next:'With the providers in view, map each kind of read to the right service.',
+ refs:'https://docs.sui.io/develop/accessing-data/rpc-providers ; https://github.com/sui-foundation/awesome-sui ; https://www.sui.io/blog/graphql-archival-store-sui-data-stack ; '+S.migration});
+ const cols=[
+  ['FULL STACK','gRPC, GraphQL, archive','QuickNode · Ankr · BlockPI\nZAN · Inodra · Triton One','gRPC + GraphQL, no archive:\nNodeInfra · 01.ro'],
+  ['gRPC NODES','Full-node gRPC only','Alchemy · Dwellir\nBlockVision · GetBlock\nNatsai','Pair with GraphQL or an archive\nfrom someone else'],
+  ['INDEXED DATA + STREAMS','Ready-made APIs','Sentio · Surflux (streams)\nBlockVision · Blockberry\nSpace and Time · ZettaBlock\nBirdeye · Dubhe Indexer','When you want answers,\nnot raw checkpoints'],
+ ];
+ cols.forEach((c,i)=>{const x=M+i*4.02,y=2.1,w=3.79,h=3.62,blue=i===0;
+  box(s,x,y,w,h,blue?C.blue:C.white);
+  mono(s,c[0],x+.22,y+.2,w-.44,.24,10,blue?'C4CEFF':C.blue);
+  text(s,c[1],x+.22,y+.52,w-.44,.45,19,blue?C.white:C.ink,{valign:'top'});
+  text(s,c[2],x+.22,y+1.1,w-.44,1.45,17,blue?C.white:C.ink,{valign:'top'});
+  text(s,c[3],x+.22,y+2.72,w-.44,.7,13,blue?'E4E9FF':C.muted,{valign:'top'});});
+ text(s,'Sui Foundation endpoints (fullnode · graphql · archive.mainnet.sui.io): rate limited, for development only.',M,5.86,11.8,.3,13,C.muted);
+ bar(s,'Before launch, ask: gRPC? GraphQL? Subscriptions over SSE? Archive? Networks? Quotas?',6.38);
 }
 // 02
 {
@@ -241,7 +309,7 @@ const snippet=(source,start,end)=>{const a=source.indexOf(start),b=source.indexO
 {
  const s=base('Lab: prove each part of the payment journey.','2 / BUILD TILL AND TRY TO BREAK IT',{
  explain:'Use the verified test-SUI fallback explicitly. The event target remains USDC. A funded USDC run, physical wallet approval and audible chime are not yet verified. This runbook does not claim those checks passed. Every student has a separate payer and shop.',
- show:'1. Clone the repo; use Node 24, pnpm install and pnpm dev, or open the live app. Copy your shop. Request test SUI. Enable sound with a click.\n2. Open till and send 0.01 SUI. Match digest, receipt and red/green balance movement; payer pays gas. Check the chime audibly.\n3. Pause feed, pay again, Resume. This stops only the listener. For real Wi-Fi loss, use a second device to pay while the till device is offline. The disconnected device cannot submit a network transaction.\n4. Reload and reopen; expect no duplicate.\n5. Copy .env.example, set SHOP_ADDRESS, FROM_CHECKPOINT to the opening boundary, and separate TILL_DB. Run pnpm indexer. Stop, pay, restart, run pnpm totals. Never share a database across shops.\n6. Use slide 11’s old receipt. Record each result. Browser totals alone do not validate the database writer.',
+ show:'1. Clone the repo; use Node 24, pnpm install and pnpm dev, or open the live app. Copy your shop. Request test SUI. Enable sound with a click.\n2. Open till and send 0.01 SUI. Match digest, receipt and red/green balance movement; payer pays gas. Check the chime audibly.\n3. Pause feed, pay again, Resume. This stops only the listener. For real Wi-Fi loss, use a second device to pay while the till device is offline. The disconnected device cannot submit a network transaction.\n4. Reload and reopen; expect no duplicate.\n5. Copy .env.example, set SHOP_ADDRESS, FROM_CHECKPOINT to the opening boundary, and separate TILL_DB. Run pnpm indexer. Stop, pay, restart, run pnpm totals. Never share a database across shops.\n6. Use slide 14’s old receipt. Record each result. Browser totals alone do not validate the database writer.',
  ask:'Why does the Wi-Fi-drop test need a second device?',
  answer:'Only the listener is offline; the payer still needs network access.',
  next:'Apply these data decisions to an existing JSON-RPC integration.',refs:'README.md; teaching/VERIFICATION.md'});
@@ -279,10 +347,10 @@ const snippet=(source,start,end)=>{const a=source.indexOf(start),b=source.indexO
  text(s,'github.com/Nuel-osas/day3-till',M,6.64,7,.3,17,C.dim,{hyperlink:{url:REPO}});
  text(s,'day3-till.vercel.app',8.65,6.64,3.93,.3,17,C.dim,{hyperlink:{url:LIVE}});
 }
-if(p._slides.length!==15)throw Error('Expected exactly 15 slides');
+if(p._slides.length!==TOTAL)throw Error('Expected exactly '+TOTAL+' slides');
 const preface=[
  '# Day 3: Real-Time Sui','',
- 'Teaching edition: 16 October 2026. Exactly 15 slides.','',
+ 'Teaching edition: 16 October 2026. Exactly 18 slides.','',
  '## Before class','',
  '- The event target is USDC. The browser form sends SUI; a funded USDC end-to-end run has not passed. Disclose the test-SUI fallback. The target diagram is not verified USDC behaviour.',
  '- Use Day3_Real_Time_Sui.pptx, not the original October 12 Day3_Till_Live_Data.pptx. The lesson follows: choose the stack, build a reliable feed, then migrate an existing app.',
@@ -290,7 +358,7 @@ const preface=[
  '- Run the SQLite writer separately. Save the opening checkpoint before payments. The writer is not a long-running Vercel worker.',
  '- For real Wi-Fi loss, pay from a second device while the listening device is offline. Pause feed is the controlled listener-only equivalent.',
  '- Check chime through a user gesture and physical wallet approval. These remain manual checks.',
- '- Slides 1-3: choose the stack. Slides 4-12: explain and build the data path. Slide 13: full lab. Slides 14-15: migration.','',
+ '- Slide 1: the promise. Slides 2-3: the Sui stack after Basecamp (7 to 8 October). Slide 4: who serves Sui data now. Slides 5-6: choose the data stack. Slides 7-15: explain and build the data path. Slide 16: full lab. Slides 17-18: migration.','',
  '## Additional gotchas to explain during the lab','',
  '- HTTP 200 can contain GraphQL or JSON-RPC errors. Inspect the body.',
  '- Coin transfers arrived live; an address-balance deposit arrived after catch-up. Retest provider behaviour; this is not a permanent protocol rule.',
