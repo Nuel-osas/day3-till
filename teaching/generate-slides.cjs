@@ -39,6 +39,8 @@ function panel(s,{x,y,w,h,tag,title,body,blue=false}){
  text(s,title,x+.22,y+(compact?.58:.64),w-.44,compact?.62:.92,compact?22:24,blue?C.white:C.ink);
  if(body)text(s,body,x+.22,y+(compact?1.24:1.69),w-.44,h-(compact?1.4:1.89),18,blue?'E4E9FF':C.muted,{valign:'top'});
 }
+// Post-Basecamp release strip. Facts from MystenLabs/sui release notes and the SDK docs.
+function fresh(s,label,t,x,y,w,h=.55,dark=false){box(s,x,y,w,h,dark?'1A2350':C.pale);mono(s,label,x+.16,y+.09,w-.32,.2,9,dark?'A3B2FF':C.blue);text(s,t,x+.16,y+.29,w-.32,h-.36,12.5,dark?C.white:C.ink,{valign:'top'});}
 function code(s,source,x,y,w,h,size=16){box(s,x,y,w,h,'111529');text(s,source,x+.22,y+.2,w-.44,h-.4,size,'E1E7FF',{fontFace:'JetBrains Mono',valign:'top'});}
 function rows(s,items,{x=M,y=2.35,width=11.83,height=.68,first=2.5,second=3.5,font=17}={}){
  items.forEach((row,i)=>{const ry=y+i*height;box(s,x,ry,width,height-.06,i===0?C.blue:(i%2?C.white:C.pale));const color=i===0?C.white:C.ink;
@@ -131,14 +133,14 @@ const snippet=(source,start,end)=>{const a=source.indexOf(start),b=source.indexO
 // 02
 {
  const s=base('Replace the data path your app depends on.','1 / CHOOSE THE STACK',{
- explain:'Foundation mainnet JSON-RPC was disabled in the week of 27 July 2026; source removal was scheduled for mid-October. Availability at other providers can differ. The 21 September announcement adds GraphQL subscriptions. Application responsibilities remain, but can now use different interfaces.',
+ explain:'Foundation mainnet JSON-RPC was disabled in the week of 27 July 2026; source removal was scheduled for mid-October. Availability at other providers can differ. The 21 September announcement adds GraphQL subscriptions. Application responsibilities remain, but can now use different interfaces. NEW SINCE BASECAMP: testnet-v1.82.1 (13 October, protocol 139) removes the JSON-RPC service from the full node and deletes its old database on startup (PR 27907), the code-removal step the migration guide scheduled for mid-October. mainnet-v1.81.1 (7 October, protocol 138) added GraphQL Query.multiGetDynamicFields, derivedObject and multiGetDerivedObjects, and a nullable Balance.coinMetadata field. We have not seen v1.82 on mainnet yet; say testnet first.',
  show:'Classify a screen: read the balance, observe a new payment, retrieve an old receipt. The same app can use more than one interface.',
  ask:'Would replacing every JSON-RPC URL with one GraphQL URL complete a migration?',
  answer:'No. Request types, selected fields, response shapes, errors, pagination and streaming transport must be adapted.',
  next:'The newest piece of that map: subscribe to exactly the activity you need.',refs:S.migration+' ; '+S.launch});
- text(s,'Start with what the screen or worker needs to do.',M,2.13,11.8,.45,23,C.muted);
+ fresh(s,'NEW SINCE BASECAMP','v1.82 removes JSON-RPC from full nodes (testnet 13 Oct).  GraphQL v1.81 (mainnet 7 Oct): multiGetDynamicFields · Balance.coinMetadata.',M,2.1,11.83,.62);
  rows(s,[['APP NEED','REPLACEMENT PATH','TILL EXAMPLE'],['State + execution','gRPC','Read balances; submit a payment'],['Filtered activity','GraphQL query + subscription','Load receipts; receive new ones'],['Pruned history','Archive / backed GraphQL','Find an old transaction by digest']],{y:2.95,height:.78,first:2.8,second:4.15,font:19});
- bar(s,'July: Foundation mainnet shutoff   →   September: GraphQL subscriptions   →   Migrate each call',6.42);
+ bar(s,'July: JSON-RPC off  →  21 Sep: subscriptions  →  7 Oct: v1.81 mainnet  →  13 Oct: JSON-RPC code removed (testnet)',6.42);
 }
 // 03 (cut from the 11-slide edition; flip to { to restore)
 if(0){
@@ -205,19 +207,20 @@ if(0){
  ].join('\n');
  if(query.replace(/\s+/g,'')!==original.replace(/\s+/g,''))throw Error('Slide query differs from repository source');
  const s=base('A matching transaction becomes a receipt.','2 / THE ACTUAL TILL QUERY',{
- explain:'This is the full repository subscription, with whitespace adjusted. Cursor is delivery progress. Digest identifies the transaction. Status rejects failures. Owner, coin type and signed amount let the client calculate the shop credit. Checkpoint and timestamp place the receipt in history.',
+ explain:'This is the full repository subscription, with whitespace adjusted. Cursor is delivery progress. Digest identifies the transaction. Status rejects failures. Owner, coin type and signed amount let the client calculate the shop credit. Checkpoint and timestamp place the receipt in history. NEW SINCE BASECAMP: mainnet-v1.81.1 added a nullable Balance.coinMetadata field to GraphQL, so a balance query can return the coin’s metadata (decimals, symbol) with the amount. Use it to format USDC (6 decimals) instead of hard-coding. The Till subscription still reads balanceChanges, whose nodes carry coinType, so look metadata up once per coin type.',
  show:'Trace paymentsFrom in src/lib/till.ts: SUCCESS, normalize owner, sum signed changes per normalized coin type with BigInt, retain only positive net credits. The writer groups receipts by digest and coin. Illustrative USDC case: 1000000 base units with six decimals means 1 USDC, after confirming metadata. An accepted-USDC-only rule is a further application requirement; the generic parser currently accepts all coins.',
  ask:'Why sum all changes for a coin instead of selecting the first positive row?',
  answer:'One transaction can contain debits and credits. Net change tells whether the shop gained the asset.',
  next:'The query describes what we want. Open a connection that keeps delivering it.',refs:'src/lib/till.ts'});
  code(s,query,M,2.25,7.75,4.58,14.5);
- [['CURSOR','Where to resume delivery'],['DIGEST + STATUS','Transaction + outcome'],['OWNER + COIN + AMOUNT','Net credit to this shop'],['TIMESTAMP + CHECKPOINT','When the receipt belongs']].forEach((a,i)=>{const y=2.47+i*.94;mono(s,a[0],8.83,y,3.73,.24,10);text(s,a[1],8.83,y+.32,3.73,.5,20);});
- text(s,'SUCCESS + positive net credit\n→ receipt → render + chime',8.83,6.28,3.73,.57,16,C.green);
+ [['CURSOR','Where to resume delivery'],['DIGEST + STATUS','Transaction + outcome'],['OWNER + COIN + AMOUNT','Net credit to this shop'],['TIMESTAMP + CHECKPOINT','When the receipt belongs']].forEach((a,i)=>{const y=2.3+i*.8;mono(s,a[0],8.83,y,3.73,.24,10);text(s,a[1],8.83,y+.32,3.73,.5,20);});
+ text(s,'SUCCESS + positive net credit\n→ receipt → render + chime',8.83,5.5,3.73,.57,15,C.green);
+ fresh(s,'NEW / v1.81 MAINNET 7 OCT','Balance.coinMetadata: a balance can bring its coin decimals (USDC = 6).',8.83,6.1,3.73,.78);
 }
 // 07
 {
  const s=base('One POST request. Many SSE deliveries.','2 / THE TRANSPORT',{
- explain:'The request sends the GraphQL document and variables as JSON. The response stays open and sends SSE frames over POST /graphql/subscriptions. Native EventSource cannot send this POST body; websocket clients use a different protocol. Fetch exposes a readable stream.',
+ explain:'The request sends the GraphQL document and variables as JSON. The response stays open and sends SSE frames over POST /graphql/subscriptions. Native EventSource cannot send this POST body; websocket clients use a different protocol. Fetch exposes a readable stream. NEW SINCE BASECAMP: the official Data Access page still says GraphQL does not support subscriptions and points to gRPC for streaming. That is out of date: we receive GraphQL subscriptions over SSE on testnet and mainnet. Agents, the Basecamp theme, are exactly the clients that should consume these streams instead of polling. For backends, SuiGrpcClient also offers checkpoint subscriptions.',
  show:'Open src/lib/sse.ts. The shown fetch is a real excerpt, reformatted. Continue into the parser: chunks can split an SSE frame, blank lines end frames, comments can be keepalives, and errors can arrive inside HTTP 200. onNext is awaited before advancing. Seven existing tests include framing and error cases.',
  ask:'Can each reader.read() be treated as one complete GraphQL message?',
  answer:'No. Network chunks and SSE message boundaries differ. Buffer and parse complete frames.',
@@ -227,14 +230,15 @@ if(0){
   .replace('body: JSON.stringify({ query, variables }), signal,','body: JSON.stringify({ query, variables }),\n    signal,');
  code(s,source.replace(/^  /gm,''),M,2.4,7.3,3.3,16);
  mono(s,'REQUEST',8.42,2.42,3.8,.25,11);text(s,'POST /graphql/subscriptions\nquery + variables',8.42,2.85,4.1,.85,20);
- mono(s,'RESPONSE STAYS OPEN',8.42,4.06,3.8,.25,11);text(s,'text/event-stream\nreceipt A → B → C → …',8.42,4.48,4.1,.9,20);
+ mono(s,'RESPONSE STAYS OPEN',8.42,3.9,3.8,.25,11);text(s,'text/event-stream\nreceipt A → B → C → …',8.42,4.25,4.1,.85,20);
+ fresh(s,'DOCS LAG THE CHAIN','Docs still say GraphQL has no subscriptions. They are live on mainnet: trust deliveries.',8.42,5.2,4.15,.8);
  bar(s,'fetch → decode text → buffer complete SSE frames → inspect errors → await the handler',6.15);
  text(s,'EventSource cannot send this POST body. A network chunk is not a complete SSE message.',M,6.75,11.8,.25,13,C.muted);
 }
 // 08
 {
  const s=base('The connection drops. The payments do not.','2 / CURSORS, BACKFILL AND ORDER',{
- explain:'A, B, C and D are illustrative teaching labels, not real digests or cursor encodings. Save A and cursor cA. Disconnect while B and C finalize. Reconnect with after cA. The service delivers B and C, then D live. With no cursor yet, a saved opening checkpoint supplies the first boundary through filter.afterCheckpoint, which is exclusive.',
+ explain:'A, B, C and D are illustrative teaching labels, not real digests or cursor encodings. Save A and cursor cA. Disconnect while B and C finalize. Reconnect with after cA. The service delivers B and C, then D live. With no cursor yet, a saved opening checkpoint supplies the first boundary through filter.afterCheckpoint, which is exclusive. NEW SINCE BASECAMP: testnet-v1.82.1 fixed subscription resumes: with after or afterCheckpoint the service no longer re-sends checkpoints at or below the resume point when a replica lags (PR 28162). Keep deduplicating by digest anyway: providers and mainnet may run older versions. The same release adds an optional x-sui-consistent-read-checkpoint header on kv-rpc so a gRPC read can wait for a checkpoint, useful for read-your-own-write after a payment (PR 27981).',
  show:'Chain progress continues while the listener is offline. Use Pause feed for the controlled demo. Save the opening checkpoint before the first stream and first payment. Never decode or invent cursors. Scope state to network, shop and query. Within a checkpoint, transactions follow their position; events follow transaction position then event position.',
  ask:'B reaches the browser but its database commit fails. Which cursor is safe to save?',
  answer:'Keep cA. Replay B on reconnect. The cursor must describe durably processed data, not merely received bytes. Replays are safe because each receipt is stored once by its digest (plus coin type), and in the SQLite writer the rows and the cursor commit in one transaction.',
@@ -242,8 +246,9 @@ if(0){
  [['A / cp 100','Delivered + saved'],['B / cp 101','Finalizes offline'],['C / cp 101','Finalizes offline'],['D / cp 102','Continues live']].forEach((a,i)=>{const x=M+i*3.02,blue=i===0||i===3;box(s,x,2.5,2.76,1.1,blue?C.blue:C.white);mono(s,a[0],x+.18,2.7,2.4,.25,14,blue?C.white:C.blue);text(s,a[1],x+.18,3.09,2.4,.3,16,blue?C.dim:C.muted);if(i<3)arrow(s,x+2.79,3.0,.2);});
  box(s,3.77,3.84,5.78,.5,C.cream);text(s,'LISTENER OFFLINE',3.77,3.92,5.78,.3,15,C.amber,{align:'center'});
  text(s,'Saved cA',M,4.77,2.5,.45,23);text(s,'Reconnect: after = cA',3.77,4.77,5.78,.45,23);text(s,'B → C → D',10.0,4.77,2.6,.45,23,C.blue);
- text(s,'No cursor yet? Save the opening checkpoint, then use filter.afterCheckpoint.',M,5.6,11.8,.42,20);
- bar(s,'Order: checkpoint → transaction position → event position. Persist before advancing.',6.27);
+ text(s,'No cursor yet? Save the opening checkpoint, then use filter.afterCheckpoint.',M,5.3,11.8,.36,18);
+ fresh(s,'NEW / v1.82.1 TESTNET 13 OCT','Resuming with after / afterCheckpoint no longer replays checkpoints at or below the resume point (PR 28162).',M,5.76,11.83,.6);
+ bar(s,'Order: checkpoint → transaction position → event position. Persist before advancing.',6.45);
 }
 // 09 (cut from the 11-slide edition; flip to { to restore)
 if(0){
@@ -308,20 +313,20 @@ if(0){
 // 13
 {
  const s=base('Lab: prove each part of the payment journey.','2 / BUILD TILL AND TRY TO BREAK IT',{
- explain:'Use the verified test-SUI fallback explicitly. The event target remains USDC. A funded USDC run, physical wallet approval and audible chime are not yet verified. This runbook does not claim those checks passed. Every student has a separate payer and shop.',
+ explain:'Use the verified test-SUI fallback explicitly. The event target remains USDC. A funded USDC run, physical wallet approval and audible chime are not yet verified. This runbook does not claim those checks passed. Every student has a separate payer and shop. NEW SINCE BASECAMP: from v1.82 the CLI command sui client faucet supports testnet as well as devnet, using the faucet proof-of-work API (PR 28213). Students with the CLI can fund their payer that way if the in-app faucet is slow. Also new in v1.81: sui client ptb accepts withdrawal(amount) inputs for address balances (PR 27351).',
  show:'1. Clone the repo; use Node 24, pnpm install and pnpm dev, or open the live app. Copy your shop. Request test SUI. Enable sound with a click.\n2. Open till and send 0.01 SUI. Match digest, receipt and red/green balance movement; payer pays gas. Check the chime audibly.\n3. Pause feed, pay again, Resume. This stops only the listener. For real Wi-Fi loss, use a second device to pay while the till device is offline. The disconnected device cannot submit a network transaction.\n4. Reload and reopen; expect no duplicate.\n5. Copy .env.example, set SHOP_ADDRESS, FROM_CHECKPOINT to the opening boundary, and separate TILL_DB. Run pnpm indexer. Stop, pay, restart, run pnpm totals. Never share a database across shops.\n6. Use the Receipt archive panel with digest ArCwXsZUTywBuM4GbNX4CVMERmBBgeYY2mgmJJjdHa3a (7 October 2025, checkpoint 250000000): the public full node says not found, GraphQL finds it, because full-node gRPC does not fall back to the archive. Record each result. Browser totals alone do not validate the database writer.',
  ask:'Why does the Wi-Fi-drop test need a second device?',
  answer:'Only the listener is offline; the payer still needs network access.',
  next:'Apply these data decisions to an existing JSON-RPC integration.',refs:'README.md; teaching/VERIFICATION.md'});
  rows(s,[['ACTION','EXPECTED EVIDENCE','PART OF THE STACK'],['Open + pay','One receipt + chime; shop credit','gRPC execution + GraphQL feed'],['Pause → pay → resume','Missed digest appears','Cursor backfill → live'],['Reload / restart writer','Same receipt counted once','Deduplication + durable cursor'],['pnpm totals','DB total for the chosen UTC day','SQLite writer + BigInt'],['Find old receipt','Date + checkpoint + SUCCESS','Archive-backed lookup']],{y:2.28,height:.64,first:3.18,second:4.43,font:17});
- mono(s,'TESTNET / VERIFIED PAYMENT PATH: SUI / USDC RUN STILL PENDING',M,6.35,11.8,.24,10,C.amber);
+ mono(s,'TESTNET / VERIFIED PAYMENT PATH: SUI / USDC RUN STILL PENDING',M,6.35,5.9,.24,10,C.amber);
  text(s,'day3-till.vercel.app',M,6.77,5.5,.25,14,C.blue,{hyperlink:{url:LIVE}});
- text(s,'Repo: github.com/Nuel-osas/day3-till',6.1,6.77,6.47,.25,13,C.blue,{hyperlink:{url:REPO}});
+ fresh(s,'NEW / v1.82 CLI','sui client faucet now works on testnet (proof-of-work).',6.85,6.28,5.73,.56);
 }
 // 14
 {
  const s=base('Migrate the client, then check the response.','3 / ONE REAL JSON-RPC MIGRATION',{
- explain:'The old client calls getBalance over JSON-RPC. SuiGrpcClient exposes a typed balance wrapper. Adapt the response; do not reuse the old object shape blindly. Inspect totalBalance, coinBalance and addressBalance. The GraphQL alternative selects Address.balance and joins receipt and event data.',
+ explain:'The old client calls getBalance over JSON-RPC. SuiGrpcClient exposes a typed balance wrapper. Adapt the response; do not reuse the old object shape blindly. Inspect totalBalance, coinBalance and addressBalance. The GraphQL alternative selects Address.balance and joins receipt and event data. NEW SINCE BASECAMP: the frontend side matters as much as the node side. The SDK docs say the legacy @mysten/dapp-kit only supports the deprecated JSON-RPC API and will not receive further updates; migrate to @mysten/dapp-kit-react (with @mysten/dapp-kit-core underneath) and pass a SuiGrpcClient to createDAppKit. With v1.82 removing JSON-RPC from full nodes, an old dApp Kit app will stop reading once its provider upgrades. Also check result shape, total balance, errors and pagination, and obtain fresh API cursors.',
  show:'Open migration/legacy-jsonrpc.ts and migration/migrated-grpc.ts. Panels use their imports, construction and calls, reformatted. Run pnpm migrate:legacy, pnpm migrate:grpc and pnpm migrate:graphql. The old public endpoint previously returned -32601 inside HTTP 200; provider behaviour varies. Other examples replace getTransactionBlock with getTransaction and queryEvents with listEvents. Normalize event type addresses in the gRPC example.',
  ask:'What changes besides the imported client class?',
  answer:'Result shape, errors, selected fields, pagination and fresh API cursors.',
@@ -331,17 +336,18 @@ if(0){
  const oldCode=['import { SuiJsonRpcClient,','  getJsonRpcFullnodeUrl',"} from '@mysten/sui/jsonRpc';",'','const client = new SuiJsonRpcClient({',"  url: getJsonRpcFullnodeUrl('testnet'),","  network: 'testnet'",'});','','client.getBalance({ owner: SHOP })'].join('\n');
  const newCode=['import { SuiGrpcClient }',"  from '@mysten/sui/grpc';",'','const client = new SuiGrpcClient({',"  network: 'testnet',",'  baseUrl:',"    'https://fullnode.testnet.sui.io:443'",'});','','const { balance } =','  await client.getBalance({ owner: SHOP });'].join('\n');
  code(s,oldCode,M,2.77,5.78,3.17,13.7);code(s,newCode,6.8,2.77,5.78,3.17,13.7);
- bar(s,'Check: result shape + total balance + errors + pagination. Obtain fresh API cursors.',6.32);
+ fresh(s,'WHY IT MATTERS NOW','v1.82 removed JSON-RPC from full nodes, and legacy @mysten/dapp-kit is JSON-RPC only. Move to @mysten/dapp-kit-react + SuiGrpcClient.',M,6.12,11.83,.62);
 }
 // 15
 {
  const s=base('Your app: replace one call and prove it works.','3 / THE ROOM’S MIGRATION WORKSHOP',{
- explain:'The final workshop is on students’ own projects. Give students without a project Till’s migration folder. The deliverable is a working change, not a verbal claim of migration.',
+ explain:'The final workshop is on students’ own projects. Give students without a project Till’s migration folder. The deliverable is a working change, not a verbal claim of migration. NEW SINCE BASECAMP: at Basecamp, Sui showed Sui Evals, an open benchmark of AI model knowledge of Sui; loading the Sui skills files reportedly raised median scores by about 35 points. MystenLabs/skills and the Sui docs MCP at sui.mcp.kapa.ai are public. Encourage students to point their coding agent at them for the migration, then verify the result themselves.',
  show:'Allow 25 to 35 minutes. Find one JSON-RPC read or polling loop. State the screen’s need, choose the replacement and edit the code. Verify a known balance or transaction. For a feed, demonstrate disconnect and replay. For history, test an old digest and retention path. Name the production provider and quotas. Ask two students to show the diff and explain their choice.',
  ask:'Show the changed call, its new result, and the failure case you tested.',
  answer:'A reviewable diff, a known-data check and a relevant failure or recovery check. The data-service choice is part of the answer.',
  next:'Return to the examples collected on slide 1. Each student should be able to explain which service handles each app responsibility.',refs:REPO+' ; '+LIVE},true);
  [['01','Find one call','What does its screen need?'],['02','Choose + replace','gRPC, GraphQL or a subscription'],['03','Verify the behaviour','Known data + one failure case']].forEach((a,i)=>{const y=2.25+i*1.02;mono(s,a[0],M,y+.12,.55,.3,18,C.dim);text(s,a[1],1.6,y,4.7,.6,27,C.white);text(s,a[2],6.6,y+.05,5.95,.55,21,C.dim);});
+ fresh(s,'BASECAMP TOOLS FOR THIS','Sui skills + Sui docs MCP (sui.mcp.kapa.ai) help your AI agent do the migration. Sui Evals: skills reportedly add ~35 points.',M,4.98,11.83,.6,true);
  box(s,M,5.67,11.83,.69,C.blue);
  text(s,'Leave with a working diff, its evidence, and a reason for your data-stack choice.',M+.18,5.82,11.45,.38,20,C.white);
  text(s,'github.com/Nuel-osas/day3-till',M,6.64,7,.3,17,C.dim,{hyperlink:{url:REPO}});

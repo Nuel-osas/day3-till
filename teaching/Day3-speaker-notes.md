@@ -114,7 +114,7 @@ https://docs.sui.io/develop/accessing-data/rpc-providers ; https://github.com/su
 ## 05. Replace the data path your app depends on.
 
 EXPLAIN
-Foundation mainnet JSON-RPC was disabled in the week of 27 July 2026; source removal was scheduled for mid-October. Availability at other providers can differ. The 21 September announcement adds GraphQL subscriptions. Application responsibilities remain, but can now use different interfaces.
+Foundation mainnet JSON-RPC was disabled in the week of 27 July 2026; source removal was scheduled for mid-October. Availability at other providers can differ. The 21 September announcement adds GraphQL subscriptions. Application responsibilities remain, but can now use different interfaces. NEW SINCE BASECAMP: testnet-v1.82.1 (13 October, protocol 139) removes the JSON-RPC service from the full node and deletes its old database on startup (PR 27907), the code-removal step the migration guide scheduled for mid-October. mainnet-v1.81.1 (7 October, protocol 138) added GraphQL Query.multiGetDynamicFields, derivedObject and multiGetDerivedObjects, and a nullable Balance.coinMetadata field. We have not seen v1.82 on mainnet yet; say testnet first.
 
 SHOW / DO
 Classify a screen: read the balance, observe a new payment, retrieve an old receipt. The same app can use more than one interface.
@@ -134,7 +134,7 @@ https://docs.sui.io/develop/accessing-data/json-rpc-migration ; https://www.sui.
 ## 06. A matching transaction becomes a receipt.
 
 EXPLAIN
-This is the full repository subscription, with whitespace adjusted. Cursor is delivery progress. Digest identifies the transaction. Status rejects failures. Owner, coin type and signed amount let the client calculate the shop credit. Checkpoint and timestamp place the receipt in history.
+This is the full repository subscription, with whitespace adjusted. Cursor is delivery progress. Digest identifies the transaction. Status rejects failures. Owner, coin type and signed amount let the client calculate the shop credit. Checkpoint and timestamp place the receipt in history. NEW SINCE BASECAMP: mainnet-v1.81.1 added a nullable Balance.coinMetadata field to GraphQL, so a balance query can return the coin’s metadata (decimals, symbol) with the amount. Use it to format USDC (6 decimals) instead of hard-coding. The Till subscription still reads balanceChanges, whose nodes carry coinType, so look metadata up once per coin type.
 
 SHOW / DO
 Trace paymentsFrom in src/lib/till.ts: SUCCESS, normalize owner, sum signed changes per normalized coin type with BigInt, retain only positive net credits. The writer groups receipts by digest and coin. Illustrative USDC case: 1000000 base units with six decimals means 1 USDC, after confirming metadata. An accepted-USDC-only rule is a further application requirement; the generic parser currently accepts all coins.
@@ -154,7 +154,7 @@ src/lib/till.ts
 ## 07. One POST request. Many SSE deliveries.
 
 EXPLAIN
-The request sends the GraphQL document and variables as JSON. The response stays open and sends SSE frames over POST /graphql/subscriptions. Native EventSource cannot send this POST body; websocket clients use a different protocol. Fetch exposes a readable stream.
+The request sends the GraphQL document and variables as JSON. The response stays open and sends SSE frames over POST /graphql/subscriptions. Native EventSource cannot send this POST body; websocket clients use a different protocol. Fetch exposes a readable stream. NEW SINCE BASECAMP: the official Data Access page still says GraphQL does not support subscriptions and points to gRPC for streaming. That is out of date: we receive GraphQL subscriptions over SSE on testnet and mainnet. Agents, the Basecamp theme, are exactly the clients that should consume these streams instead of polling. For backends, SuiGrpcClient also offers checkpoint subscriptions.
 
 SHOW / DO
 Open src/lib/sse.ts. The shown fetch is a real excerpt, reformatted. Continue into the parser: chunks can split an SSE frame, blank lines end frames, comments can be keepalives, and errors can arrive inside HTTP 200. onNext is awaited before advancing. Seven existing tests include framing and error cases.
@@ -174,7 +174,7 @@ src/lib/sse.ts; tests/
 ## 08. The connection drops. The payments do not.
 
 EXPLAIN
-A, B, C and D are illustrative teaching labels, not real digests or cursor encodings. Save A and cursor cA. Disconnect while B and C finalize. Reconnect with after cA. The service delivers B and C, then D live. With no cursor yet, a saved opening checkpoint supplies the first boundary through filter.afterCheckpoint, which is exclusive.
+A, B, C and D are illustrative teaching labels, not real digests or cursor encodings. Save A and cursor cA. Disconnect while B and C finalize. Reconnect with after cA. The service delivers B and C, then D live. With no cursor yet, a saved opening checkpoint supplies the first boundary through filter.afterCheckpoint, which is exclusive. NEW SINCE BASECAMP: testnet-v1.82.1 fixed subscription resumes: with after or afterCheckpoint the service no longer re-sends checkpoints at or below the resume point when a replica lags (PR 28162). Keep deduplicating by digest anyway: providers and mainnet may run older versions. The same release adds an optional x-sui-consistent-read-checkpoint header on kv-rpc so a gRPC read can wait for a checkpoint, useful for read-your-own-write after a payment (PR 27981).
 
 SHOW / DO
 Chain progress continues while the listener is offline. Use Pause feed for the controlled demo. Save the opening checkpoint before the first stream and first payment. Never decode or invent cursors. Scope state to network, shop and query. Within a checkpoint, transactions follow their position; events follow transaction position then event position.
@@ -194,7 +194,7 @@ https://github.com/MystenLabs/sui/blob/main/crates/sui-indexer-alt-graphql/schem
 ## 09. Lab: prove each part of the payment journey.
 
 EXPLAIN
-Use the verified test-SUI fallback explicitly. The event target remains USDC. A funded USDC run, physical wallet approval and audible chime are not yet verified. This runbook does not claim those checks passed. Every student has a separate payer and shop.
+Use the verified test-SUI fallback explicitly. The event target remains USDC. A funded USDC run, physical wallet approval and audible chime are not yet verified. This runbook does not claim those checks passed. Every student has a separate payer and shop. NEW SINCE BASECAMP: from v1.82 the CLI command sui client faucet supports testnet as well as devnet, using the faucet proof-of-work API (PR 28213). Students with the CLI can fund their payer that way if the in-app faucet is slow. Also new in v1.81: sui client ptb accepts withdrawal(amount) inputs for address balances (PR 27351).
 
 SHOW / DO
 1. Clone the repo; use Node 24, pnpm install and pnpm dev, or open the live app. Copy your shop. Request test SUI. Enable sound with a click.
@@ -219,7 +219,7 @@ README.md; teaching/VERIFICATION.md
 ## 10. Migrate the client, then check the response.
 
 EXPLAIN
-The old client calls getBalance over JSON-RPC. SuiGrpcClient exposes a typed balance wrapper. Adapt the response; do not reuse the old object shape blindly. Inspect totalBalance, coinBalance and addressBalance. The GraphQL alternative selects Address.balance and joins receipt and event data.
+The old client calls getBalance over JSON-RPC. SuiGrpcClient exposes a typed balance wrapper. Adapt the response; do not reuse the old object shape blindly. Inspect totalBalance, coinBalance and addressBalance. The GraphQL alternative selects Address.balance and joins receipt and event data. NEW SINCE BASECAMP: the frontend side matters as much as the node side. The SDK docs say the legacy @mysten/dapp-kit only supports the deprecated JSON-RPC API and will not receive further updates; migrate to @mysten/dapp-kit-react (with @mysten/dapp-kit-core underneath) and pass a SuiGrpcClient to createDAppKit. With v1.82 removing JSON-RPC from full nodes, an old dApp Kit app will stop reading once its provider upgrades. Also check result shape, total balance, errors and pagination, and obtain fresh API cursors.
 
 SHOW / DO
 Open migration/legacy-jsonrpc.ts and migration/migrated-grpc.ts. Panels use their imports, construction and calls, reformatted. Run pnpm migrate:legacy, pnpm migrate:grpc and pnpm migrate:graphql. The old public endpoint previously returned -32601 inside HTTP 200; provider behaviour varies. Other examples replace getTransactionBlock with getTransaction and queryEvents with listEvents. Normalize event type addresses in the gRPC example.
@@ -239,7 +239,7 @@ migration/; https://docs.sui.io/develop/accessing-data/json-rpc-migration
 ## 11. Your app: replace one call and prove it works.
 
 EXPLAIN
-The final workshop is on students’ own projects. Give students without a project Till’s migration folder. The deliverable is a working change, not a verbal claim of migration.
+The final workshop is on students’ own projects. Give students without a project Till’s migration folder. The deliverable is a working change, not a verbal claim of migration. NEW SINCE BASECAMP: at Basecamp, Sui showed Sui Evals, an open benchmark of AI model knowledge of Sui; loading the Sui skills files reportedly raised median scores by about 35 points. MystenLabs/skills and the Sui docs MCP at sui.mcp.kapa.ai are public. Encourage students to point their coding agent at them for the migration, then verify the result themselves.
 
 SHOW / DO
 Allow 25 to 35 minutes. Find one JSON-RPC read or polling loop. State the screen’s need, choose the replacement and edit the code. Verify a known balance or transaction. For a feed, demonstrate disconnect and replay. For history, test an old digest and retention path. Name the production provider and quotas. Ask two students to show the diff and explain their choice.
