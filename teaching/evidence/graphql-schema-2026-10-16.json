@@ -1,0 +1,128 @@
+{
+  "checked_on": "2026-10-16",
+  "endpoint": "https://graphql.testnet.sui.io/graphql",
+  "note": "Availability prose in this schema is stale. See the September 21 launch and verified live transaction deliveries. This snapshot verifies field names, filter constraints, ordering descriptions and service limits.",
+  "response": {
+    "data": {
+      "__schema": {
+        "subscriptionType": {
+          "name": "Subscription",
+          "fields": [
+            {
+              "name": "checkpoints",
+              "description": "Subscribe to checkpoints as they are finalized.\n\nPass `after` (opaque cursor) or `afterCheckpoint` (sequence number) to resume from a known point. If both are provided, the subscription resumes from whichever is later.\n\nThis subscription is not yet available for use.",
+              "args": [
+                {
+                  "name": "after",
+                  "description": null
+                },
+                {
+                  "name": "afterCheckpoint",
+                  "description": null
+                }
+              ]
+            },
+            {
+              "name": "transactions",
+              "description": "Subscribe to transactions as they are finalized, with optional filtering.\n\nResume from a known point with `after` (an opaque cursor from a prior delivery) and/or `filter.afterCheckpoint`. The subscription first backfills the matching transactions after that point via the scanning API, then continues with the live stream.\n\nEach matching transaction is yielded individually as an edge, ordered by checkpoint and then by position within the checkpoint. Each edge carries a cursor for resumption.\n\nThis subscription is not yet available for use.",
+              "args": [
+                {
+                  "name": "filter",
+                  "description": null
+                },
+                {
+                  "name": "after",
+                  "description": null
+                }
+              ]
+            },
+            {
+              "name": "events",
+              "description": "Subscribe to events as they are emitted, with optional filtering.\n\nResume from a known point with `after` (an opaque cursor from a prior delivery) and/or `filter.afterCheckpoint`. The subscription first backfills the matching events after that point via the scanning API, then continues with the live stream.\n\nEach matching event is yielded individually as an edge, ordered by checkpoint, then by transaction position within the checkpoint, then by position within the transaction. Each edge carries a cursor for resumption.\n\nThis subscription is not yet available for use.",
+              "args": [
+                {
+                  "name": "filter",
+                  "description": null
+                },
+                {
+                  "name": "after",
+                  "description": null
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "tx": {
+        "inputFields": [
+          {
+            "name": "afterCheckpoint",
+            "description": "Filter to transactions that occurred strictly after the given checkpoint."
+          },
+          {
+            "name": "atCheckpoint",
+            "description": "Filter to transactions in the given checkpoint."
+          },
+          {
+            "name": "beforeCheckpoint",
+            "description": "Filter to transaction that occurred strictly before the given checkpoint."
+          },
+          {
+            "name": "function",
+            "description": "Filter transactions by move function called. Calls can be filtered by the `package`, `package::module`, or the `package::module::name` of their function."
+          },
+          {
+            "name": "kind",
+            "description": "An input filter selecting for either system or programmable transactions."
+          },
+          {
+            "name": "affectedAddress",
+            "description": "Limit to transactions that interacted with the given address.\nThe address could be a sender, sponsor, or recipient of the transaction."
+          },
+          {
+            "name": "affectedObject",
+            "description": "Limit to transactions that interacted with the given object.\nThe object could have been created, read, modified, deleted, wrapped, or unwrapped by the transaction.\nObjects that were passed as a `Receiving` input are not considered to have been affected by a transaction unless they were actually received."
+          },
+          {
+            "name": "sentAddress",
+            "description": "Limit to transactions that were sent by the given address."
+          }
+        ]
+      },
+      "ev": {
+        "inputFields": [
+          {
+            "name": "afterCheckpoint",
+            "description": "Limit to events that occured strictly after the given checkpoint."
+          },
+          {
+            "name": "atCheckpoint",
+            "description": "Limit to events in the given checkpoint."
+          },
+          {
+            "name": "beforeCheckpoint",
+            "description": "Limit to event that occured strictly before the given checkpoint."
+          },
+          {
+            "name": "sender",
+            "description": "Filter on events by transaction sender address."
+          },
+          {
+            "name": "module",
+            "description": "Events emitted by a particular module. An event is emitted by a particular module if some function in the module is called by a PTB and emits an event.\n\nModules can be filtered by their package, or package::module. We currently do not support filtering by emitting module and event type at the same time so if both are provided in one filter, the query will error."
+          },
+          {
+            "name": "type",
+            "description": "This field is used to specify the type of event emitted.\n\nEvents can be filtered by their type's package, package::module, or their fully qualified type name.\n\nGeneric types can be queried by either the generic type name, e.g. `0x2::coin::Coin`, or by the full type name, such as `0x2::coin::Coin<0x2::sui::SUI>`."
+          }
+        ]
+      },
+      "serviceConfig": {
+        "maxQueryPayloadSize": 5000,
+        "queryTimeoutMs": 40000,
+        "defaultPageSize": 20,
+        "maxPageSize": 50
+      }
+    }
+  }
+}

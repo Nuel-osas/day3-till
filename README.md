@@ -8,19 +8,21 @@ The case-study app for **Real-Time Sui: GraphQL Subscriptions and the Data Stack
 
 ## Class agenda and readiness
 
-The 15-slide deck follows the advertised technical topic. Till is the worked example, followed by a workshop on students' own applications.
+The 15-slide teaching edition follows one lesson: choose the data stack, follow a payment through a reliable subscription and ledger, then migrate a call in an existing app. Each slide has presenter notes with an explanation, demonstration, classroom question, expected answer and transition.
 
-| Advertised learning outcome | Slides |
-| --- | --- |
-| gRPC, GraphQL, archive, indexing framework and workload choices | 2–3, 9 |
-| Transaction/event filters and selected fields | 4–5 |
-| SSE over POST and streaming with fetch | 6 |
-| Cursors, backfill, ordering and subscriber throttling | 7–8 |
-| SQLite/Postgres, idempotency and when to use Rust | 8–9, 13 |
-| Old receipts, query/page/time limits and production providers | 10–11 |
-| Build Till, recover a payment, total the database and migrate an app | 12–15 |
+| Advertised learning outcome | Slides | What students see or do |
+| --- | --- | --- |
+| gRPC, GraphQL, archive, indexing framework and workload choices | 2–3, 10 | Trace the services and choose paths for a wallet, shop, game and analytics worker. |
+| Transaction/event filters and selected fields | 5–6 | Compare concrete filter uses; turn a successful net shop credit into a receipt. |
+| SSE over POST and streaming with fetch | 7 | Read the real request and explain why chunks need SSE framing. |
+| Cursors, backfill, ordering and subscriber throttling | 8–9, 12 | Follow A/B/C/D across a disconnect; choose the last durably committed position. |
+| SQLite/Postgres, idempotency and when to use Rust | 9–10, 13 | Commit rows and cursor together, restart, total the DB, and compare pipeline requirements. |
+| Old receipts, query/page/time limits and production providers | 11–12 | Retrieve a known old digest; inspect limits and production endpoint requirements. |
+| Build Till and migrate an app | 4, 13–15 | Run the payment/recovery/ledger lab, inspect a real before/after migration, then change an own-app call. |
 
-**USDC readiness gap:** the event advertises USDC payments, but the built-in payment form currently sends SUI. The feed and SQLite writer process coin types generically; no funded USDC transfer has been verified. The deck explicitly labels the current SUI walkthrough. Do not present it as a completed USDC demo.
+**USDC readiness gap:** the event advertises USDC payments, but the built-in payment form currently sends SUI. The feed and SQLite writer process coin types generically; no funded USDC transfer has been verified. Slide 4 distinguishes the illustrative USDC target from the current SUI demo, and slide 13 labels the verified lab path. The target diagram is not evidence of a USDC run.
+
+For the actual Wi-Fi-drop exercise, disconnect the listening device and pay from another device. **Pause feed** provides the controlled listener-only equivalent. A fully offline payer cannot submit a payment. The local SQLite writer runs separately from the Vercel app; verify its totals separately from browser totals.
 
 ## Try it
 
@@ -102,12 +104,14 @@ Check JSON response bodies, not just HTTP status. On 15 October 2026 the public 
 
 ## Teaching assets
 
-- [Editable PowerPoint](teaching/Day3_Till_Live_Data_Seedless_Style.pptx)
-- [PDF deck](teaching/Day3_Till_Live_Data_Seedless_Style.pdf)
+- [Editable PowerPoint: Real-Time Sui](teaching/Day3_Real_Time_Sui.pptx)
+- [PDF deck](teaching/Day3_Real_Time_Sui.pdf)
 - [Speaker notes](teaching/Day3-speaker-notes.md)
 - [Verification evidence](teaching/VERIFICATION.md)
 
 `pnpm slides` regenerates the 15-slide PowerPoint and notes from `teaching/generate-slides.cjs`. Screenshots are in `teaching/assets/`. PDF export uses the presentation rendering workflow described in `teaching/RENDERING.md`.
+
+The older `Day3_Till_Live_Data_Seedless_Style` filenames are compatibility copies of this same teaching edition, so earlier file links also open the updated lesson.
 
 ## Deploy
 

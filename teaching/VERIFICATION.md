@@ -1,4 +1,4 @@
-# Verification · 15 October 2026
+# Verification · app 15 October / teaching edition 16 October 2026
 
 ## App and tests
 
@@ -33,9 +33,13 @@ Archived receipt: [ArCwXsZUTywBuM4GbNX4CVMERmBBgeYY2mgmJJjdHa3a](https://suiscan
 
 ## Slide checks
 
-The final 15-slide sequence was realigned to the full advertised title and all seven learning outcomes. It ends with a migration workshop on students’ projects, and explicitly marks the unverified USDC payment requirement. The current testnet query payload limit was re-read as 5,000 bytes.
+The 16 October teaching edition replaces the topic-card sequence with a worked lesson: data-service responsibilities, a stack diagram, an illustrative payment journey, transaction/event filter examples, a real subscription, POST SSE, a disconnect timeline, atomic database progress, the Rust decision, archival proof, production limits, a lab and an own-app migration. Slides 4 and 13 distinguish the USDC target from the verified SUI path. This revision changes teaching assets only.
 
-15 editable slides, 15 speaker-note entries and a 15-page PDF. Rendered through Quick Look and Chrome with the supplied DM Sans and JetBrains Mono fonts. All slides were inspected through contact sheets, with detailed checks of screenshots and code slides. Final text overflow check: zero candidates.
+15 editable slides, 15 corresponding speaker-note entries and a 15-page PDF. Every slide has an explanation, demonstration, classroom question, expected answer and transition. The displayed subscription is checked by the generator against the real repository document after whitespace normalization. Code excerpts identify omissions and point to their source files.
+
+Rendered through Quick Look and Chrome with the supplied DM Sans and JetBrains Mono fonts. All slides were inspected on contact sheets, with detailed checks of code and recovery diagrams. Final text overflow check: zero candidates. Diagram arrows use native text because Quick Look incorrectly repeated zero-height arrow shapes on later pages.
+
+Public testnet schema was rechecked on 16 October. The committed snapshot in `teaching/evidence/graphql-schema-2026-10-16.json` records filter names, ordering, the event module/type constraint and service limits: 5,000-byte query payload, 40-second query timeout, transaction pages 20 default / 50 maximum. These are query limits, not measured stream lifetime or subscriber thresholds. Schema availability prose remains stale relative to the launch and previous successful live deliveries.
 
 ## Limits of these checks
 
